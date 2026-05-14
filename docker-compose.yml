@@ -17,7 +17,7 @@ services:
       - "5000:5000"
     environment:
       PORT: 5000
-      MONGO_URI: mongodb://mongo:27017/cloud-kitchen-simulator
+      MONGO_URI: mongodb+srv://REDACTED_MONGO_AUTH/?appName=waf-cluster
       CLIENT_URL: http://localhost:3000
       NODE_ENV: production
     depends_on:

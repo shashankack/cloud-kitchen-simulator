@@ -81,42 +81,34 @@ export function SimulatorProvider({ children }) {
   const addTask = async (payload) => {
     if (!roomId) return;
     const task = await createTask(roomId, payload);
-    setTasks((prev) => [task, ...prev]);
+    // Let the socket 'task:created' event update local state
     return task;
   };
 
   const retryTaskForRoom = async (taskId) => {
     if (!roomId) return;
     const task = await retryTask(roomId, taskId);
-    setTasks((prev) =>
-      prev.map((item) => (item._id === task._id ? task : item)),
-    );
+    // Socket will emit task:updated
     return task;
   };
 
   const retryAllFailedTasksForRoom = async () => {
     if (!roomId) return;
     const result = await retryAllFailedTasks(roomId);
-    if (Array.isArray(result.tasks) && result.tasks.length > 0) {
-      setTasks((prev) => {
-        const byId = new Map(result.tasks.map((task) => [task._id, task]));
-        return prev.map((item) => byId.get(item._id) || item);
-      });
-    }
+    // Tasks will be updated via socket events
     return result;
   };
 
   const addServer = async (payload) => {
     if (!roomId) return;
     const server = await createServer(roomId, payload);
-    setServers((prev) => [server, ...prev]);
+    // Server list will be refreshed via socket events
     return server;
   };
 
   const addAutoScaledServer = async (totalCPU = 16, totalRAM = 32) => {
     if (!roomId) return;
     const server = await createAutoScaledServer(roomId, totalCPU, totalRAM);
-    setServers((prev) => [server, ...prev]);
     return server;
   };
 
@@ -207,86 +199,14 @@ export function SimulatorProvider({ children }) {
         setServers(freshServers);
       };
 
-      // Pending changes queue to batch frequent socket updates
-      const pending = {
-        fullTasks: null,
-        updates: new Map(),
-        fullServers: null,
-        serverUpdates: new Map(),
-      };
-      let flushTimer = null;
-      let lastFlushAt = 0;
-
-      const scheduleFlush = (explicitDelay) => {
-        if (flushTimer) return;
-
-        // Adaptive delay: larger when there are many pending updates or when recent flush just ran
-        const updatesCount = pending.updates.size + pending.serverUpdates.size;
-        const now = Date.now();
-        let delay = 80;
-        if (typeof explicitDelay === "number") {
-          delay = explicitDelay;
-        } else {
-          if (updatesCount > 200) delay = 350;
-          else if (updatesCount > 80) delay = 220;
-          else if (updatesCount > 30) delay = 140;
-          else delay = 80;
-
-          // if we flushed very recently, slightly increase to avoid rapid churn
-          if (now - lastFlushAt < 200) delay += 60;
-        }
-
-        flushTimer = window.setTimeout(() => {
-          flushTimer = null;
-          lastFlushAt = Date.now();
-
-          // apply full replacements first
-          if (pending.fullTasks !== null) {
-            setTasks(pending.fullTasks);
-            pending.fullTasks = null;
-            pending.updates.clear();
-          } else if (pending.updates.size > 0) {
-            setTasks((prev) => {
-              const byId = new Map(prev.map((t) => [t._id, t]));
-              for (const [id, task] of pending.updates) {
-                byId.set(id, task);
-              }
-              const merged = Array.from(byId.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-              return merged;
-            });
-            pending.updates.clear();
-          }
-
-          if (pending.fullServers !== null) {
-            setServers(pending.fullServers);
-            pending.fullServers = null;
-            pending.serverUpdates.clear();
-          } else if (pending.serverUpdates.size > 0) {
-            setServers((prev) => {
-              const byId = new Map(prev.map((s) => [s._id, s]));
-              for (const [id, server] of pending.serverUpdates) {
-                byId.set(id, server);
-              }
-              return Array.from(byId.values());
-            });
-            pending.serverUpdates.clear();
-          }
-        }, delay);
-      };
-
+      // Direct socket-driven state updates (no batching)
       try {
         socket = await connectSocket(roomId);
       } catch (firstErr) {
         try {
           socket = await connectSocket(roomId);
         } catch (secondErr) {
-          socket = {
-            on: () => {},
-            off: () => {},
-            disconnect: () => {
-              if (pollingInterval) window.clearInterval(pollingInterval);
-            },
-          };
+          socket = { on: () => {}, off: () => {}, disconnect: () => { if (pollingInterval) window.clearInterval(pollingInterval); } };
           pollingInterval = window.setInterval(syncState, 500);
         }
       }
@@ -298,65 +218,66 @@ export function SimulatorProvider({ children }) {
       };
 
       const handleTaskCreated = (task) => {
-        // queue a creation as an update
-        pending.updates.set(task._id, task);
-        scheduleFlush();
+        setTasks((prev) => [task, ...prev]);
       };
 
       const handleTasksSeeded = (docs) => {
-        pending.fullTasks = docs;
-        scheduleFlush(50);
+        setTasks(docs || []);
       };
+
       const handleServerCreated = (server) => {
-        pending.serverUpdates.set(server._id, server);
-        scheduleFlush();
+        setServers((prev) => [server, ...prev]);
       };
+
       const handleServersSeeded = (docs) => {
-        pending.fullServers = docs;
-        scheduleFlush(50);
+        setServers(docs || []);
       };
-      const handleTasksReset = () => { pending.fullTasks = []; scheduleFlush(); };
+
+      const handleTasksReset = () => setTasks([]);
       const handleLogsReset = () => setTaskLogs([]);
-      const handleServersReset = () => { pending.fullServers = []; scheduleFlush(); };
+      const handleServersReset = () => setServers([]);
+
       const handleTaskUpdated = (updatedTask) => {
-        pending.updates.set(updatedTask._id, updatedTask);
-        scheduleFlush();
+        setTasks((prev) => {
+          const byId = new Map(prev.map((t) => [t._id, t]));
+          byId.set(updatedTask._id, updatedTask);
+          return Array.from(byId.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        });
       };
+
       const handleServerUpdated = (updatedServer) => {
-        pending.serverUpdates.set(updatedServer._id, updatedServer);
-        scheduleFlush();
+        setServers((prev) => {
+          const byId = new Map(prev.map((s) => [s._id, s]));
+          byId.set(updatedServer._id, updatedServer);
+          return Array.from(byId.values());
+        });
       };
+
       const handleServerRemoved = ({ serverId }) => {
-        pending.serverUpdates.delete(serverId);
-        // mark removal by setting fullServers null and applying a filter on next flush
-        pending.fullServers = null;
-        // apply immediate filter
         setServers((prev) => prev.filter((server) => server._id !== serverId));
       };
+
       const handleAutoScaledServersRemoved = ({ deletedCount } = {}) => {
         if ((deletedCount || 0) > 0) {
-          setAutoScaledCleanupMessage(
-            `Removed ${deletedCount} idle auto-scaled servers`,
-          );
+          setAutoScaledCleanupMessage(`Removed ${deletedCount} idle auto-scaled servers`);
+          window.setTimeout(() => setAutoScaledCleanupMessage(null), 4000);
         }
-        window.setTimeout(() => setAutoScaledCleanupMessage(null), 4000);
         getServers(roomId).then(setServers).catch(console.error);
       };
+
       const handleScheduleAllocations = () => {
         syncState().catch(console.error);
       };
+
       const handleInit = (data) => {
-        if (data.tasks) { pending.fullTasks = data.tasks; }
-        if (Array.isArray(data.logs)) setTaskLogs(data.logs);
-        if (data.servers) { pending.fullServers = data.servers; }
-        scheduleFlush(10);
+        if (data.tasks) setTasks(data.tasks || []);
+        if (Array.isArray(data.logs)) setTaskLogs(data.logs || []);
+        if (data.servers) setServers(data.servers || []);
       };
-      const handleSocketConnect = () => {
-        scheduleResync();
-      };
-      const handleSocketReconnect = () => {
-        scheduleResync();
-      };
+
+      const handleSocketConnect = () => scheduleResync();
+      const handleSocketReconnect = () => scheduleResync();
+
       const handleLogCreated = (log) => {
         if (!log || !log._id) return;
         setTaskLogs((prev) => {

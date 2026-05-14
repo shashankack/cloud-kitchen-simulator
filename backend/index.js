@@ -99,7 +99,7 @@ mongoose
       reconcileOverdueRunningTasks(io).catch((err) => {
         console.error("Overdue task sweep error:", err);
       });
-    }, 2000);
+    }, 500);
 
     if (typeof overdueSweepInterval.unref === "function") {
       overdueSweepInterval.unref();

@@ -196,7 +196,8 @@ export async function reconcileOverdueRunningTasks(io, roomId = null) {
 
   for (const task of overdueTasks) {
     const startedAt = new Date(task.startedAt).getTime();
-    const dueAt = startedAt + (task.executionTime || 0) * 1000;
+    // small early buffer to account for client-side "0s" display and clock drift
+    const dueAt = startedAt + (task.executionTime || 0) * 1000 - 100;
 
     if (dueAt > now) continue;
 

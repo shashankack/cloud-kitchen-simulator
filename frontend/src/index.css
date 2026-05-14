@@ -1,0 +1,121 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap");
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+.sim-node-active {
+  animation: simNodeFloat 3s ease-in-out infinite;
+}
+
+.sim-node-idle {
+  animation: simNodeIdle 7s ease-in-out infinite;
+}
+
+@keyframes simNodeFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 0 rgba(76, 201, 240, 0));
+  }
+
+  50% {
+    transform: translateY(-6px);
+    filter: drop-shadow(0 0 18px rgba(76, 201, 240, 0.35));
+  }
+}
+
+@keyframes simNodeIdle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.react-flow__edge.sim-edge-active .react-flow__edge-path {
+  stroke-dasharray: 10;
+  animation: simEdgeDash 0.9s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(76, 201, 240, 0.8));
+}
+
+.react-flow__edge.sim-edge-idle .react-flow__edge-path {
+  stroke-dasharray: 6;
+  opacity: 0.45;
+}
+
+@keyframes simEdgeDash {
+  from {
+    stroke-dashoffset: 20;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.learn-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.learn-page > *:not(.learn-bg-blob) {
+  position: relative;
+  z-index: 2;
+}
+
+.learn-bg-blob {
+  position: fixed;
+  z-index: 0;
+  width: 420px;
+  height: 420px;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: 0.28;
+  pointer-events: none;
+  animation: learnBlobFloat 18s ease-in-out infinite alternate;
+}
+
+.learn-bg-blob-one {
+  top: 12%;
+  left: -120px;
+  background: rgba(76, 201, 240, 0.45);
+}
+
+.learn-bg-blob-two {
+  right: -140px;
+  bottom: 8%;
+  background: rgba(168, 85, 247, 0.38);
+  animation-delay: -6s;
+}
+
+@keyframes learnBlobFloat {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(80px, -40px, 0) scale(1.15);
+  }
+
+  100% {
+    transform: translate3d(30px, 70px, 0) scale(0.95);
+  }
+}
+
+@media (max-width: 768px) {
+  .learn-bg-blob {
+    width: 280px;
+    height: 280px;
+    filter: blur(70px);
+    opacity: 0.22;
+  }
+}

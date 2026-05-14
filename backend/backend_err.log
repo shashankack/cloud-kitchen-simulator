@@ -527,3 +527,32 @@ Auto completion error: DocumentNotFoundError: No document found for query "{ _id
   filter: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') },
   query: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') }
 }
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f269c5e3e66670725488') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 4)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f269c5e3e66670725488') },
+  query: { _id: new ObjectId('6a05f269c5e3e66670725488') }
+}
+Auto completion error: Error: Task is not running
+    at completeTaskLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/taskController.js:213:40)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:423:27)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5)
+Auto completion error: Error: Task is not running
+    at completeTaskLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/taskController.js:213:40)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:423:27)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7)

@@ -41,8 +41,10 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
   };
 
   const getAllocationColor = (method) => {
-    if (method === "bankers") return { bg: "rgba(76,201,240,0.18)", fg: "#7dd3fc" };
-    if (method === "idle-fill") return { bg: "rgba(99,225,175,0.18)", fg: "#63e1af" };
+    if (method === "bankers")
+      return { bg: "rgba(76,201,240,0.18)", fg: "#7dd3fc" };
+    if (method === "idle-fill")
+      return { bg: "rgba(99,225,175,0.18)", fg: "#63e1af" };
     return { bg: "rgba(255,255,255,0.08)", fg: "text.secondary" };
   };
 
@@ -63,7 +65,11 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
       <Stack spacing={1.2}>
         <Stack
           direction="row"
-          sx={{ width: "100%", justifyContent: "space-between", alignItems: "center" }}
+          sx={{
+            width: "100%",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
         >
           <Typography sx={{ fontWeight: 800 }}>
             {isKitchen ? kitchenName : techName}
@@ -101,7 +107,9 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
             border: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          <Typography sx={{ fontSize: "0.72rem", color: "text.secondary", mb: 0.4 }}>
+          <Typography
+            sx={{ fontSize: "0.72rem", color: "text.secondary", mb: 0.4 }}
+          >
             Capacity
           </Typography>
           <Typography sx={{ fontSize: "0.82rem", fontWeight: 700 }}>
@@ -161,20 +169,32 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
                     border: "1px solid rgba(76,201,240,0.2)",
                   }}
                 >
-                  <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
+                  <Stack
+                    direction="row"
+                    sx={{
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 1,
+                    }}
+                  >
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontSize: "0.72rem", color: "#7dd3fc", lineHeight: 1.2 }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.72rem",
+                          color: "#7dd3fc",
+                          lineHeight: 1.2,
+                        }}
+                      >
                         {task.name}
                       </Typography>
-                      <Typography sx={{ fontSize: "0.68rem", color: "text.secondary", mt: 0.2 }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.68rem",
+                          color: "text.secondary",
+                          mt: 0.2,
+                        }}
+                      >
                         Occupies {task.cpu ?? 0} CPU + {task.ram ?? 0} RAM
-                      </Typography>
-                      <Typography sx={{ fontSize: "0.68rem", color: "text.secondary", mt: 0.2 }}>
-                        Remaining time: {(() => {
-                          const r = getRemainingTime(task);
-                          if (r === null) return "--";
-                          return r > 0 ? `${r}s` : "Completing...";
-                        })()}
                       </Typography>
                     </Box>
 
@@ -185,7 +205,8 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
                         height: 20,
                         fontSize: "0.62rem",
                         fontWeight: 800,
-                        background: getAllocationColor(task.allocationMethod).bg,
+                        background: getAllocationColor(task.allocationMethod)
+                          .bg,
                         color: getAllocationColor(task.allocationMethod).fg,
                         flexShrink: 0,
                       }}

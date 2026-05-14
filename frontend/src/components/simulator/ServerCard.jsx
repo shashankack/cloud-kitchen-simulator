@@ -170,7 +170,11 @@ const ServerCard = ({ server, runningTasks = [], globalProgress = 0 }) => {
                         Occupies {task.cpu ?? 0} CPU + {task.ram ?? 0} RAM
                       </Typography>
                       <Typography sx={{ fontSize: "0.68rem", color: "text.secondary", mt: 0.2 }}>
-                        Remaining time: {getRemainingTime(task) ?? "--"}s
+                        Remaining time: {(() => {
+                          const r = getRemainingTime(task);
+                          if (r === null) return "--";
+                          return r > 0 ? `${r}s` : "Completing...";
+                        })()}
                       </Typography>
                     </Box>
 

@@ -1,0 +1,529 @@
+Auto completion error: Error: Task is not running
+    at completeTaskLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/taskController.js:213:40)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:423:27)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5)
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 3)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') },
+  query: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 2)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') },
+  query: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') },
+  query: { _id: new ObjectId('6a05ef94bc423f9b55bfdc64') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5f') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc62') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc62') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc62') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef82bc423f9b55bfdc5d') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef82bc423f9b55bfdc5d') },
+  query: { _id: new ObjectId('6a05ef82bc423f9b55bfdc5d') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') },
+  query: { _id: new ObjectId('6a05ef83bc423f9b55bfdc5e') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 3)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 3)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 2)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 2)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async completeTaskLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/taskController.js:238:7)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:423:27)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: { matchedCount: 0 },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 2)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f021bc423f9b55bfddd3') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 1)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async Timeout._onTimeout (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:26:7) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') },
+  query: { _id: new ObjectId('6a05f021bc423f9b55bfddd3') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f00ebc423f9b55bfddd1') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 2)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f00ebc423f9b55bfddd1') },
+  query: { _id: new ObjectId('6a05f00ebc423f9b55bfddd1') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f00ebc423f9b55bfddd1') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async completeTaskLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/taskController.js:238:7)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:423:27)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f00ebc423f9b55bfddd1') },
+  query: { _id: new ObjectId('6a05f00ebc423f9b55bfddd1') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f00dbc423f9b55bfddcc') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') },
+  query: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') }
+}
+Auto completion error: DocumentNotFoundError: No document found for query "{ _id: new ObjectId('6a05f00dbc423f9b55bfddcc') }" on model "Server"
+    at model.$__save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:538:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async model.save (C:\Projects\MCA\Sem-2\WAF\Projects\cloud-kitchen-simulator\backend\node_modules\mongoose\lib\model.js:664:5)
+    at async Promise.all (index 0)
+    at async runSchedulerLogic (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:375:3)
+    at async completeTaskAutomatically (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:427:7)
+    at async reconcileOverdueRunningTasks (file:///C:/Projects/MCA/Sem-2/WAF/Projects/cloud-kitchen-simulator/backend/controllers/schedulerController.js:204:5) {
+  result: {
+    acknowledged: true,
+    modifiedCount: 0,
+    upsertedId: null,
+    upsertedCount: 0,
+    matchedCount: 0
+  },
+  numAffected: 0,
+  filter: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') },
+  query: { _id: new ObjectId('6a05f00dbc423f9b55bfddcc') }
+}

@@ -85,6 +85,20 @@ io.on("connection", async (socket) => {
     console.error("Error sending init state:", e.message);
   }
 
+  // Allow clients to request an immediate authoritative refresh via socket
+  socket.on("tasks:refresh", async (payload) => {
+    try {
+      const Task = (await import("./models/Task.js")).default;
+      const ServerModel = (await import("./models/Server.js")).default;
+      const tasks = await Task.find({ roomId }).populate("assignedServer");
+      const servers = await ServerModel.find({ roomId });
+      // emit full init payload so client's existing `init` handler updates state
+      socket.emit("init", { tasks, servers, roomId });
+    } catch (err) {
+      console.error("Error handling tasks:refresh:", err.message);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected from room", roomId, socket.id);
   });

@@ -2,7 +2,9 @@
 
 // components
 import { Box, Button, Stack, Typography, Tooltip } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRoom } from "../../context/RoomContext";
+import { getSocket } from "../../api/socket";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { useViewMode } from "../../context/ViewModeContext";
 import { useSimulator } from "../../context/SimulatorContext";
@@ -12,6 +14,10 @@ function TaskCard({ task, index }) {
   const { isKitchen } = useViewMode();
   const { retryTaskForRoom } = useSimulator();
   const [timeLeft, setTimeLeft] = useState(null);
+
+  const refreshedRef = useRef(false);
+
+  const { roomId } = useRoom();
 
   useEffect(() => {
     if (task.status !== "running") {
@@ -24,7 +30,23 @@ function TaskCard({ task, index }) {
       const executionTimeMs = (task.executionTime || 10) * 1000;
       const elapsedMs = Date.now() - startedAt;
       const remaining = Math.max(0, executionTimeMs - elapsedMs);
-      setTimeLeft(Math.ceil(remaining / 1000));
+      const secsLeft = Math.ceil(remaining / 1000);
+      setTimeLeft(secsLeft);
+
+      if (secsLeft <= 0 && !refreshedRef.current) {
+        refreshedRef.current = true;
+        (async () => {
+          try {
+            if (!roomId) return;
+            const s = getSocket();
+            if (s && s.connected) {
+              s.emit("tasks:refresh", { roomId });
+            }
+          } catch (e) {
+            // ignore
+          }
+        })();
+      }
     };
 
     updateTimer();
@@ -65,7 +87,9 @@ function TaskCard({ task, index }) {
       }}
     >
       {task.status === "running" && timeLeft !== null
-        ? `${timeLeft}s`
+        ? timeLeft > 0
+          ? `${timeLeft}s`
+          : "Completing..."
         : task.status === "waiting"
           ? `${task.executionTime || 10}s`
           : task.status}

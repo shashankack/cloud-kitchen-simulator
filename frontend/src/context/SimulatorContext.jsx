@@ -21,6 +21,7 @@ import {
 } from "../api/servers.api";
 import { connectSocket, disconnectSocket } from "../api/socket";
 import { triggerScheduler } from "../api/scheduler.api";
+import { toggleAutoScaling, getRoom } from "../api/rooms.api";
 
 const SimulatorContext = createContext(null);
 
@@ -34,6 +35,7 @@ export function SimulatorProvider({ children }) {
   const [globalLoading, setGlobalLoading] = useState(false);
   const [autoScaledCleanupMessage, setAutoScaledCleanupMessage] =
     useState(null);
+  const [autoScalingEnabled, setAutoScalingEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const syncVisibilityState = async () => {
@@ -171,19 +173,34 @@ export function SimulatorProvider({ children }) {
     return triggerScheduler(roomId);
   };
 
+  const toggleAutoScalingForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const result = await toggleAutoScaling(roomId);
+      setAutoScalingEnabled(result.autoScalingEnabled);
+      return result;
+    } catch (err) {
+      console.error("Failed to toggle auto-scaling:", err);
+    }
+  };
+
   const initialize = async () => {
     try {
       setLoading(true);
 
-      const [tasksData, logsData, serversData] = await Promise.all([
+      const [tasksData, logsData, serversData, roomData] = await Promise.all([
         getTasks(roomId),
         getTaskLogs(roomId),
         getServers(roomId),
+        getRoom(roomId),
       ]);
 
       setTasks(tasksData);
       setTaskLogs(Array.isArray(logsData) ? logsData : []);
       setServers(serversData);
+      if (roomData && typeof roomData.autoScalingEnabled === "boolean") {
+        setAutoScalingEnabled(roomData.autoScalingEnabled);
+      }
 
       let socket;
       let pollingInterval = null;
@@ -304,6 +321,12 @@ export function SimulatorProvider({ children }) {
         }
       };
 
+      const handleRoomUpdated = (data) => {
+        if (data && typeof data.autoScalingEnabled === "boolean") {
+          setAutoScalingEnabled(data.autoScalingEnabled);
+        }
+      };
+
       socket.on("task:created", handleTaskCreated);
       socket.on("tasks:seeded", handleTasksSeeded);
       socket.on("seed:progress", handleSeedProgress);
@@ -319,6 +342,7 @@ export function SimulatorProvider({ children }) {
       socket.on("schedule:allocations", handleScheduleAllocations);
       socket.on("init", handleInit);
       socket.on("log:created", handleLogCreated);
+      socket.on("room:updated", handleRoomUpdated);
       socket.on("connect", handleSocketConnect);
       socket.on("reconnect", handleSocketReconnect);
 
@@ -346,6 +370,7 @@ export function SimulatorProvider({ children }) {
         socket.off("schedule:allocations", handleScheduleAllocations);
         socket.off("init", handleInit);
         socket.off("log:created", handleLogCreated);
+        socket.off("room:updated", handleRoomUpdated);
         socket.off("connect", handleSocketConnect);
         socket.off("reconnect", handleSocketReconnect);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -411,6 +436,8 @@ export function SimulatorProvider({ children }) {
       clearTaskLogsForRoom,
       resetServersForRoom,
       runScheduler,
+      toggleAutoScalingForRoom,
+      autoScalingEnabled,
       setTasks,
       setTaskLogs,
       setServers,
@@ -423,6 +450,7 @@ export function SimulatorProvider({ children }) {
       globalProgress,
       globalLoading,
       autoScaledCleanupMessage,
+      autoScalingEnabled,
     ],
   );
 
@@ -460,6 +488,8 @@ export function useSimulator() {
       clearTaskLogsForRoom: async () => {},
       resetServersForRoom: async () => {},
       runScheduler: async () => {},
+      toggleAutoScalingForRoom: async () => {},
+      autoScalingEnabled: true,
       setTasks: () => {},
       setTaskLogs: () => {},
       setServers: () => {},

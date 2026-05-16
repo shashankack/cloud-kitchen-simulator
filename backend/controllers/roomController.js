@@ -37,3 +37,23 @@ export async function getRoom(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export async function toggleAutoScaling(req, res) {
+  try {
+    const { roomId } = req.params;
+    const room = await Room.findOne({ roomId });
+    if (!room) return res.status(404).json({ error: "Room not found" });
+
+    room.autoScalingEnabled = !room.autoScalingEnabled;
+    await room.save();
+
+    const io = req.app && req.app.get("io");
+    if (io) {
+      io.to(roomId).emit("room:updated", { autoScalingEnabled: room.autoScalingEnabled });
+    }
+
+    res.json({ autoScalingEnabled: room.autoScalingEnabled });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}

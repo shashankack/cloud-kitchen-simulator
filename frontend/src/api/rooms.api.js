@@ -15,3 +15,8 @@ export const getRoom = async (roomId) => {
   const res = await axiosClient.get(`/rooms/${roomId}`);
   return res.data;
 };
+
+export const toggleAutoScaling = async (roomId) => {
+  const res = await axiosClient.patch(`/rooms/${roomId}/auto-scaling`);
+  return res.data;
+};

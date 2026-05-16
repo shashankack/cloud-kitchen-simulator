@@ -231,6 +231,18 @@ export async function runSchedulerLogic(io, roomId = null) {
   }
 
   const runPromise = (async () => {
+  let autoScalingEnabled = true;
+  if (roomId) {
+    try {
+      const Room = (await import("../models/Room.js")).default;
+      const room = await Room.findOne({ roomId });
+      autoScalingEnabled = room ? room.autoScalingEnabled !== false : true;
+    } catch (e) {
+      // default to enabled if room lookup fails
+      autoScalingEnabled = true;
+    }
+  }
+
   // fetch waiting tasks sorted by priority (1=high)
   const waiting = await Task.find({
     roomId,
@@ -280,8 +292,9 @@ export async function runSchedulerLogic(io, roomId = null) {
   const availableCPU = totalCPU - allocatedCPU;
   const availableRAM = totalRAM - allocatedRAM;
 
-  // Create servers if demand exceeds available resources
+  // Create servers if demand exceeds available resources AND auto-scaling is enabled
   if (
+    autoScalingEnabled &&
     servers.length > 0 &&
     (cpuUtilization > 0.8 ||
       ((totalDemandCPU > availableCPU || totalDemandRAM > availableRAM) &&

@@ -9,11 +9,13 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Skeleton,
+  Chip,
 } from "@mui/material";
 
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 
 import { useViewMode } from "../../context/ViewModeContext";
 import { useRoom } from "../../context/RoomContext";
@@ -34,13 +36,14 @@ function SimulatorTopbar({
 }) {
   const { isKitchen } = useViewMode();
   const { roomName, clearRoom } = useRoom();
-  const { resetTasksForRoom, resetServersForRoom } = useSimulator();
+  const { resetTasksForRoom, resetServersForRoom, toggleAutoScalingForRoom, autoScalingEnabled } = useSimulator();
   const { loading } = useSimulator();
   const navigate = useNavigate();
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [serverDialogOpen, setServerDialogOpen] = useState(false);
   const [taskSeedOpen, setTaskSeedOpen] = useState(false);
   const [serverSeedOpen, setServerSeedOpen] = useState(false);
+  const [isTogglingAutoScaling, setIsTogglingAutoScaling] = useState(false);
 
   const handleLeaveRoom = () => {
     clearRoom();
@@ -68,6 +71,17 @@ function SimulatorTopbar({
       )
     ) {
       resetServersForRoom();
+    }
+  };
+
+  const handleToggleAutoScaling = async () => {
+    setIsTogglingAutoScaling(true);
+    try {
+      await toggleAutoScalingForRoom();
+    } catch (err) {
+      console.error("Failed to toggle auto-scaling:", err);
+    } finally {
+      setIsTogglingAutoScaling(false);
     }
   };
 
@@ -241,6 +255,22 @@ function SimulatorTopbar({
                 },
               }}
             >
+              <Chip
+                icon={<CloudUploadRoundedIcon />}
+                label={autoScalingEnabled ? "Auto-Scaling ON" : "Auto-Scaling OFF"}
+                onClick={handleToggleAutoScaling}
+                disabled={isTogglingAutoScaling}
+                color={autoScalingEnabled ? "primary" : "default"}
+                variant={autoScalingEnabled ? "filled" : "outlined"}
+                sx={{
+                  minWidth: 140,
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  height: 44,
+                  borderRadius: "12px",
+                }}
+              />
+
               <TaskControlsMenu
                 onCreateTask={() => setTaskDialogOpen(true)}
                 onSeedTasks={() => setTaskSeedOpen(true)}

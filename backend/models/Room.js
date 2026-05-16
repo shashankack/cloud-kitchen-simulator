@@ -16,6 +16,12 @@ const roomSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // When true the scheduler will bypass the Banker's safety check
+    // to allow intentionally unsafe allocations (useful for deadlock simulation).
+    allowUnsafeAllocation: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

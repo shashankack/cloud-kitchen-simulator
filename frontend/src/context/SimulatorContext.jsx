@@ -36,6 +36,8 @@ export function SimulatorProvider({ children }) {
   const [autoScaledCleanupMessage, setAutoScaledCleanupMessage] =
     useState(null);
   const [autoScalingEnabled, setAutoScalingEnabled] = useState(true);
+  const [deadlockEnabled, setDeadlockEnabled] = useState(false);
+  const [lastAllocations, setLastAllocations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const syncVisibilityState = async () => {
@@ -184,6 +186,19 @@ export function SimulatorProvider({ children }) {
     }
   };
 
+  const toggleDeadlockForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const { toggleDeadlock } = await import("../api/rooms.api");
+      const result = await toggleDeadlock(roomId);
+      // backend responds with { allowUnsafeAllocation: boolean }
+      setDeadlockEnabled(result.allowUnsafeAllocation);
+      return result;
+    } catch (err) {
+      console.error("Failed to toggle deadlock mode:", err);
+    }
+  };
+
   const initialize = async () => {
     try {
       setLoading(true);
@@ -200,6 +215,9 @@ export function SimulatorProvider({ children }) {
       setServers(serversData);
       if (roomData && typeof roomData.autoScalingEnabled === "boolean") {
         setAutoScalingEnabled(roomData.autoScalingEnabled);
+      }
+      if (roomData && typeof roomData.allowUnsafeAllocation === "boolean") {
+        setDeadlockEnabled(roomData.allowUnsafeAllocation);
       }
 
       let socket;
@@ -288,6 +306,18 @@ export function SimulatorProvider({ children }) {
       };
 
       const handleScheduleAllocations = () => {
+        return syncState().catch(console.error);
+      };
+
+      const handleScheduleAllocationsWithData = (payload) => {
+        try {
+          if (payload && Array.isArray(payload.allocations)) {
+            const stamped = (payload.allocations || []).map((a) => ({ ...a, ts: Date.now() }));
+            setLastAllocations(stamped);
+          }
+        } catch (e) {
+          /* ignore */
+        }
         syncState().catch(console.error);
       };
 
@@ -325,6 +355,9 @@ export function SimulatorProvider({ children }) {
         if (data && typeof data.autoScalingEnabled === "boolean") {
           setAutoScalingEnabled(data.autoScalingEnabled);
         }
+        if (data && typeof data.allowUnsafeAllocation === "boolean") {
+          setDeadlockEnabled(data.allowUnsafeAllocation);
+        }
       };
 
       socket.on("task:created", handleTaskCreated);
@@ -339,7 +372,7 @@ export function SimulatorProvider({ children }) {
       socket.on("server:updated", handleServerUpdated);
       socket.on("server:removed", handleServerRemoved);
       socket.on("autoScaledServers:removed", handleAutoScaledServersRemoved);
-      socket.on("schedule:allocations", handleScheduleAllocations);
+      socket.on("schedule:allocations", handleScheduleAllocationsWithData);
       socket.on("init", handleInit);
       socket.on("log:created", handleLogCreated);
       socket.on("room:updated", handleRoomUpdated);
@@ -367,7 +400,7 @@ export function SimulatorProvider({ children }) {
         socket.off("server:updated", handleServerUpdated);
         socket.off("server:removed", handleServerRemoved);
         socket.off("autoScaledServers:removed", handleAutoScaledServersRemoved);
-        socket.off("schedule:allocations", handleScheduleAllocations);
+        socket.off("schedule:allocations", handleScheduleAllocationsWithData);
         socket.off("init", handleInit);
         socket.off("log:created", handleLogCreated);
         socket.off("room:updated", handleRoomUpdated);
@@ -437,7 +470,10 @@ export function SimulatorProvider({ children }) {
       resetServersForRoom,
       runScheduler,
       toggleAutoScalingForRoom,
+      toggleDeadlockForRoom,
       autoScalingEnabled,
+      deadlockEnabled,
+      lastAllocations,
       setTasks,
       setTaskLogs,
       setServers,
@@ -451,6 +487,8 @@ export function SimulatorProvider({ children }) {
       globalLoading,
       autoScaledCleanupMessage,
       autoScalingEnabled,
+      deadlockEnabled,
+      lastAllocations,
     ],
   );
 
@@ -489,7 +527,10 @@ export function useSimulator() {
       resetServersForRoom: async () => {},
       runScheduler: async () => {},
       toggleAutoScalingForRoom: async () => {},
+      toggleDeadlockForRoom: async () => {},
       autoScalingEnabled: true,
+      deadlockEnabled: false,
+      lastAllocations: [],
       setTasks: () => {},
       setTaskLogs: () => {},
       setServers: () => {},

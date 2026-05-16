@@ -10,19 +10,28 @@ import {
   Button,
   Skeleton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import InfoIcon from "@mui/icons-material/Info";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useViewMode } from "../../context/ViewModeContext";
 import { useSimulator } from "../../context/SimulatorContext";
 import { mapNamePair } from "../../utils/nameMapper";
 
 function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   const { isKitchen } = useViewMode();
-  const { retryTaskForRoom, retryAllFailedTasksForRoom, globalProgress, loading } = useSimulator();
+  const { retryTaskForRoom, retryAllFailedTasksForRoom, globalProgress, loading, deadlockEnabled, lastAllocations } = useSimulator();
   const [now, setNow] = useState(Date.now());
+  const [selectedServer, setSelectedServer] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -32,6 +41,20 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   // Calculate total available resources
   const totalCPU = servers.reduce((sum, s) => sum + s.totalCPU, 0);
   const totalRAM = servers.reduce((sum, s) => sum + s.totalRAM, 0);
+
+    // Servers involved in recent unsafe allocations
+    const unsafeServerIds = new Set();
+    if (lastAllocations && Array.isArray(lastAllocations)) {
+      lastAllocations.forEach((a) => {
+        if (a.unsafe && a.serverId) unsafeServerIds.add(a.serverId);
+      });
+    }
+
+    const openServerAllocations = (server) => {
+      setSelectedServer(server);
+    };
+
+    const closeServerAllocations = () => setSelectedServer(null);
 
   // Calculate used resources
   const usedCPU = servers.reduce((sum, s) => sum + s.usedCPU, 0);
@@ -157,6 +180,45 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
               Secondary pass enabled: {idleServers.length} idle server{idleServers.length === 1 ? "" : "s"} can be used to absorb leftover waiting tasks after the Banker check.
             </Typography>
           </Alert>
+
+          {/* Unsafe allocations notice when deadlock simulation is enabled */}
+          {deadlockEnabled && lastAllocations && lastAllocations.length > 0 && (
+            (() => {
+              const unsafe = lastAllocations.filter((a) => a.unsafe);
+              if (unsafe.length === 0) return null;
+              return (
+                <Alert
+                  icon={<PendingActionsIcon sx={{ fontSize: "1.4rem" }} />}
+                  severity="error"
+                  sx={{
+                    background: "rgba(239,68,68,0.08)",
+                    borderColor: "rgba(239,68,68,0.22)",
+                    color: "#fca5a5",
+                  }}
+                >
+                  <Stack spacing={0.5}>
+                    <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>
+                      Unsafe allocations performed while Deadlock Simulation is enabled
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.85rem" }}>
+                      The scheduler allocated resources despite failing the Banker's safety check. Affected allocations:
+                    </Typography>
+                    <Stack sx={{ mt: 1 }}>
+                      {unsafe.map((a, idx) => {
+                        const task = a.task || {};
+                        const server = servers.find((s) => s._id === a.serverId) || {};
+                        return (
+                          <Typography key={idx} sx={{ fontSize: "0.85rem" }}>
+                            • {task.name || task._id} → {server.name || a.serverId}
+                          </Typography>
+                        );
+                      })}
+                    </Stack>
+                  </Stack>
+                </Alert>
+              );
+            })()
+          )}
         </Stack>
 
         {/* System Overview */}
@@ -257,6 +319,75 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
             </Grid>
           </Stack>
         </Paper>
+
+        {/* Servers Overview (highlight unsafe servers) */}
+        <Paper sx={{ p: 2.5, mt: 2, background: "rgba(255,255,255,0.03)", borderRadius: 2 }}>
+          <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "text.secondary", mb: 1 }}>
+            🖥️ Servers ({servers.length})
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+            {servers.map((s) => {
+              const isUnsafe = unsafeServerIds.has(s._id);
+              return (
+                <Paper
+                  key={s._id}
+                  onClick={() => openServerAllocations(s)}
+                  sx={{
+                    p: 1,
+                    minWidth: 160,
+                    mr: 1,
+                    mb: 1,
+                    borderRadius: 2,
+                    cursor: "pointer",
+                    border: isUnsafe ? "2px solid rgba(239,68,68,0.9)" : "1px solid rgba(255,255,255,0.06)",
+                    background: isUnsafe ? "rgba(239,68,68,0.04)" : "rgba(255,255,255,0.02)",
+                    transition: "transform 160ms ease",
+                    '&:hover': { transform: 'translateY(-3px)' },
+                    '@keyframes pulse': {
+                      '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
+                      '70%': { boxShadow: '0 0 0 8px rgba(239,68,68,0)' },
+                      '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
+                    },
+                    animation: isUnsafe ? 'pulse 1.6s infinite' : 'none',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography sx={{ fontSize: "0.85rem", fontWeight: 800 }}>{s.name}</Typography>
+                    {isUnsafe && <Chip label="UNSAFE" size="small" color="error" sx={{ fontWeight: 800 }} />}
+                  </Box>
+                  <Typography sx={{ fontSize: "0.8rem", color: "text.secondary" }}>{s.usedCPU || 0}/{s.totalCPU} CPU • {s.usedRAM || 0}/{s.totalRAM} RAM</Typography>
+                </Paper>
+              );
+            })}
+          </Stack>
+        </Paper>
+
+        {/* Allocation Timeline */}
+        {lastAllocations && lastAllocations.length > 0 && (
+          <Paper sx={{ p: 2, mt: 2, background: "rgba(255,255,255,0.02)", borderRadius: 2 }}>
+            <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "text.secondary", mb: 1 }}>
+              🕒 Recent Allocations
+            </Typography>
+            <Stack spacing={1}>
+              {lastAllocations.slice(-8).reverse().map((a, idx) => {
+                const task = a.task || {};
+                const server = servers.find((s) => s._id === a.serverId) || {};
+                const age = a.ts ? Math.max(0, Math.floor((now - a.ts) / 1000)) : null;
+                return (
+                  <Stack key={idx} direction="row" spacing={1} alignItems="center" sx={{ justifyContent: "space-between" }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ width: 10, height: 10, borderRadius: "50%", background: a.unsafe ? "#ef4444" : "#22c55e" }} />
+                      <Typography sx={{ fontSize: "0.9rem", fontWeight: 800 }}>
+                        {task.name || task._id} → {server.name || a.serverId}
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ fontSize: "0.8rem", color: "text.secondary" }}>{age !== null ? `${age}s ago` : "just now"}</Typography>
+                  </Stack>
+                );
+              })}
+            </Stack>
+          </Paper>
+        )}
 
         {/* Currently Active */}
         <Paper
@@ -674,6 +805,29 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
           </Grid>
         </Grid>
       </Stack>
+      {/* Server allocations dialog */}
+      <Dialog open={Boolean(selectedServer)} onClose={closeServerAllocations} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>Recent allocations for {selectedServer?.name || ''}</span>
+          <CloseRoundedIcon onClick={closeServerAllocations} sx={{ cursor: 'pointer' }} />
+        </DialogTitle>
+        <DialogContent>
+          <List>
+            {(lastAllocations || []).filter((a) => a.serverId === selectedServer?._id).slice(-12).reverse().map((a, i) => {
+              const task = a.task || {};
+              const age = a.ts ? Math.max(0, Math.floor((now - a.ts) / 1000)) : null;
+              return (
+                <ListItem key={i} divider>
+                  <ListItemText
+                    primary={`${task.name || task._id} ${a.unsafe ? ' (UNSAFE)' : ''}`}
+                    secondary={`${a.unsafe ? 'unsafe allocation • ' : ''}${age !== null ? `${age}s ago` : 'just now'}`}
+                  />
+                </ListItem>
+              );
+            })}
+          </List>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

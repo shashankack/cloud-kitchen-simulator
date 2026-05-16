@@ -8,6 +8,10 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Skeleton,
   Chip,
 } from "@mui/material";
@@ -36,7 +40,14 @@ function SimulatorTopbar({
 }) {
   const { isKitchen } = useViewMode();
   const { roomName, clearRoom } = useRoom();
-  const { resetTasksForRoom, resetServersForRoom, toggleAutoScalingForRoom, autoScalingEnabled } = useSimulator();
+  const {
+    resetTasksForRoom,
+    resetServersForRoom,
+    toggleAutoScalingForRoom,
+    autoScalingEnabled,
+    toggleDeadlockForRoom,
+    deadlockEnabled,
+  } = useSimulator();
   const { loading } = useSimulator();
   const navigate = useNavigate();
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -44,6 +55,8 @@ function SimulatorTopbar({
   const [taskSeedOpen, setTaskSeedOpen] = useState(false);
   const [serverSeedOpen, setServerSeedOpen] = useState(false);
   const [isTogglingAutoScaling, setIsTogglingAutoScaling] = useState(false);
+  const [isTogglingDeadlock, setIsTogglingDeadlock] = useState(false);
+  const [deadlockConfirmOpen, setDeadlockConfirmOpen] = useState(false);
 
   const handleLeaveRoom = () => {
     clearRoom();
@@ -82,6 +95,18 @@ function SimulatorTopbar({
       console.error("Failed to toggle auto-scaling:", err);
     } finally {
       setIsTogglingAutoScaling(false);
+    }
+  };
+
+  const handleToggleDeadlock = async () => {
+    setIsTogglingDeadlock(true);
+    try {
+      await toggleDeadlockForRoom();
+    } catch (err) {
+      console.error("Failed to toggle deadlock mode:", err);
+    } finally {
+      setIsTogglingDeadlock(false);
+      setDeadlockConfirmOpen(false);
     }
   };
 
@@ -257,7 +282,9 @@ function SimulatorTopbar({
             >
               <Chip
                 icon={<CloudUploadRoundedIcon />}
-                label={autoScalingEnabled ? "Auto-Scaling ON" : "Auto-Scaling OFF"}
+                label={
+                  autoScalingEnabled ? "Auto-Scaling ON" : "Auto-Scaling OFF"
+                }
                 onClick={handleToggleAutoScaling}
                 disabled={isTogglingAutoScaling}
                 color={autoScalingEnabled ? "primary" : "default"}
@@ -267,9 +294,62 @@ function SimulatorTopbar({
                   fontWeight: 700,
                   fontSize: "0.8rem",
                   height: 44,
-                  borderRadius: "12px",
+                  px: 1.5,
                 }}
               />
+
+              <Chip
+                label={deadlockEnabled ? "Deadlock SIM ON" : "Deadlock SIM OFF"}
+                onClick={() => setDeadlockConfirmOpen(true)}
+                disabled={isTogglingDeadlock}
+                color={deadlockEnabled ? "error" : "default"}
+                variant={deadlockEnabled ? "filled" : "outlined"}
+                sx={{
+                  minWidth: 140,
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  height: 44,
+                  px: 1.5,
+                }}
+              />
+
+              <Dialog
+                open={deadlockConfirmOpen}
+                onClose={() => setDeadlockConfirmOpen(false)}
+              >
+                <DialogTitle>
+                  {deadlockEnabled
+                    ? "Disable Deadlock Simulation?"
+                    : "Enable Deadlock Simulation?"}
+                </DialogTitle>
+                <DialogContent>
+                  <Typography>
+                    Enabling Deadlock Simulation will bypass the Banker's safety
+                    check and allow allocations which may lead to a
+                    deadlock-like state. Proceed only for testing.
+                  </Typography>
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    onClick={() => setDeadlockConfirmOpen(false)}
+                    disabled={isTogglingDeadlock}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleToggleDeadlock}
+                    variant="contained"
+                    color={deadlockEnabled ? "primary" : "error"}
+                    disabled={isTogglingDeadlock}
+                  >
+                    {isTogglingDeadlock
+                      ? "Working..."
+                      : deadlockEnabled
+                        ? "Disable"
+                        : "Enable"}
+                  </Button>
+                </DialogActions>
+              </Dialog>
 
               <TaskControlsMenu
                 onCreateTask={() => setTaskDialogOpen(true)}

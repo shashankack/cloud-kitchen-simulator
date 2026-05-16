@@ -232,14 +232,21 @@ export async function runSchedulerLogic(io, roomId = null) {
 
   const runPromise = (async () => {
   let autoScalingEnabled = true;
+  let allowUnsafeAllocation = false;
   if (roomId) {
     try {
       const Room = (await import("../models/Room.js")).default;
       const room = await Room.findOne({ roomId });
-      autoScalingEnabled = room ? room.autoScalingEnabled !== false : true;
+      if (room) {
+        autoScalingEnabled = room.autoScalingEnabled !== false;
+        allowUnsafeAllocation = room.allowUnsafeAllocation === true;
+      } else {
+        autoScalingEnabled = true;
+      }
     } catch (e) {
       // default to enabled if room lookup fails
       autoScalingEnabled = true;
+      allowUnsafeAllocation = false;
     }
   }
 
@@ -377,8 +384,11 @@ export async function runSchedulerLogic(io, roomId = null) {
     }
 
     const safe = bankersSafety(processes, serverAvailable);
-    if (!safe) {
-      continue; // unsafe, skip
+    // If the room has deadlock-simulation enabled, bypass the safety check
+    if (!allowUnsafeAllocation) {
+      if (!safe) {
+        continue; // unsafe, skip
+      }
     }
 
     // allocate on chosen server
@@ -392,7 +402,10 @@ export async function runSchedulerLogic(io, roomId = null) {
     allocatedCPU += task.cpu;
     allocatedRAM += task.ram;
 
-    allocations.push({ taskId: task._id, serverId: chosen._id, task });
+    // mark whether this allocation was unsafe (i.e., bankersSafety failed but allocation allowed)
+    const unsafe = !safe && allowUnsafeAllocation;
+
+    allocations.push({ taskId: task._id, serverId: chosen._id, task, unsafe });
   }
 
   // Secondary pass: if Banker leaves waiting tasks behind, consume completely idle servers.

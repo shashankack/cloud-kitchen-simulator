@@ -226,7 +226,12 @@ export function SimulatorProvider({ children }) {
       };
 
       const handleServerCreated = (server) => {
-        setServers((prev) => [server, ...prev]);
+        if (!server || !server._id) return;
+        setServers((prev) => {
+          const byId = new Map(prev.map((s) => [s._id, s]));
+          byId.set(server._id, server);
+          return Array.from(byId.values());
+        });
       };
 
       const handleServersSeeded = (docs) => {

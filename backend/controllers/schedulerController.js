@@ -12,6 +12,7 @@ export const AUTO_SCALE_LIMITS = {
 const scheduledCompletionTimers = new Map(); // taskId -> timeoutId
 // FIX: Prevent race condition in task completion - track tasks currently being completed
 const tasksBeingCompleted = new Set(); // taskId
+const schedulerRunsByRoom = new Map(); // roomId -> Promise
 
 export function scheduleAutoCompletion(taskId, io, delayMs) {
   // clear existing if present
@@ -171,6 +172,20 @@ function buildAutoScaledServerSpecs(requiredCPU, requiredRAM) {
   return specs;
 }
 
+function getNextAutoScaledServerName(servers) {
+  const existingNames = new Set((servers || []).map((s) => s.name));
+
+  for (let i = 0; i < 2000; i++) {
+    const letter = String.fromCharCode(65 + (i % 26));
+    const cycle = Math.floor(i / 26);
+    const suffix = cycle === 0 ? "" : `${cycle}`;
+    const candidate = `Server-${letter}${suffix}`;
+    if (!existingNames.has(candidate)) return candidate;
+  }
+
+  return `Server-${Date.now()}`;
+}
+
 export async function triggerScheduler(req, res) {
   try {
     const allocations = await runSchedulerLogic(req.app.get("io"), req.roomId);
@@ -209,6 +224,13 @@ export async function reconcileOverdueRunningTasks(io, roomId = null) {
 }
 
 export async function runSchedulerLogic(io, roomId = null) {
+  const roomKey = roomId || "__all_rooms__";
+  const inFlight = schedulerRunsByRoom.get(roomKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const runPromise = (async () => {
   // fetch waiting tasks sorted by priority (1=high)
   const waiting = await Task.find({
     roomId,
@@ -275,9 +297,10 @@ export async function runSchedulerLogic(io, roomId = null) {
       );
 
       for (const spec of newServerSpecs) {
+        const serverName = getNextAutoScaledServerName(servers);
         const newServer = new Server({
           roomId,
-          name: `Server-${String.fromCharCode(65 + (servers.length % 26))}`,
+          name: serverName,
           totalCPU: spec.totalCPU,
           totalRAM: spec.totalRAM,
           usedCPU: 0,
@@ -403,6 +426,12 @@ export async function runSchedulerLogic(io, roomId = null) {
   }
 
   return allocations;
+  })().finally(() => {
+    schedulerRunsByRoom.delete(roomKey);
+  });
+
+  schedulerRunsByRoom.set(roomKey, runPromise);
+  return runPromise;
 }
 
 export async function completeTaskAutomatically(taskId, io) {

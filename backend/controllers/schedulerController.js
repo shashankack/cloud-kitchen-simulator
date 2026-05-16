@@ -188,7 +188,8 @@ function getNextAutoScaledServerName(servers) {
 
 export async function triggerScheduler(req, res) {
   try {
-    const allocations = await runSchedulerLogic(req.app.get("io"), req.roomId);
+    const step = Boolean(req?.body?.step || req?.query?.step);
+    const allocations = await runSchedulerLogic(req.app.get("io"), req.roomId, { step });
     res.json({ allocated: allocations.length, allocations });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -223,7 +224,7 @@ export async function reconcileOverdueRunningTasks(io, roomId = null) {
   return completedCount;
 }
 
-export async function runSchedulerLogic(io, roomId = null) {
+export async function runSchedulerLogic(io, roomId = null, options = {}) {
   const roomKey = roomId || "__all_rooms__";
   const inFlight = schedulerRunsByRoom.get(roomKey);
   if (inFlight) {
@@ -406,6 +407,11 @@ export async function runSchedulerLogic(io, roomId = null) {
     const unsafe = !safe && allowUnsafeAllocation;
 
     allocations.push({ taskId: task._id, serverId: chosen._id, task, unsafe });
+
+    // If single-step mode requested, stop after performing one allocation
+    if (options && options.step) {
+      break;
+    }
   }
 
   // Secondary pass: if Banker leaves waiting tasks behind, consume completely idle servers.

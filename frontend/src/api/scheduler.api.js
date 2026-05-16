@@ -7,3 +7,11 @@ export const triggerScheduler = async (roomId) => {
   });
   return res.data;
 };
+
+export const stepScheduler = async (roomId) => {
+  const res = await axiosClient.post("/schedule/trigger", {
+    roomId,
+    step: true,
+  });
+  return res.data;
+};

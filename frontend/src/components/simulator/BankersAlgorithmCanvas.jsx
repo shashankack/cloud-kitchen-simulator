@@ -17,6 +17,12 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  IconButton,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
@@ -29,13 +35,65 @@ import { mapNamePair } from "../../utils/nameMapper";
 
 function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   const { isKitchen } = useViewMode();
-  const { retryTaskForRoom, retryAllFailedTasksForRoom, globalProgress, loading, deadlockEnabled, lastAllocations } = useSimulator();
+  const {
+    retryTaskForRoom,
+    retryAllFailedTasksForRoom,
+    globalProgress,
+    loading,
+    deadlockEnabled,
+    lastAllocations,
+    clearAllocations,
+    allocationsTtlMs,
+    setAllocationsTtlMs,
+    setLastAllocations,
+  } = useSimulator();
+  
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [prevAllocations, setPrevAllocations] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [selectedServer, setSelectedServer] = useState(null);
+  const [highlightedServers, setHighlightedServers] = useState(new Map());
+  const [lastAllocationsTs, setLastAllocationsTs] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Highlight servers involved in recent allocations (brief flash)
+  useEffect(() => {
+    if (!lastAllocations || lastAllocations.length === 0) return;
+    const newAllocs = lastAllocations.filter((a) => a.ts && a.ts > lastAllocationsTs);
+    if (!newAllocs || newAllocs.length === 0) return;
+    const maxTs = Math.max(...newAllocs.map((a) => a.ts));
+    setLastAllocationsTs(maxTs);
+
+    // Add server ids to highlighted map with expiry timestamp
+    setHighlightedServers((prev) => {
+      const copy = new Map(prev);
+      const nowTs = Date.now();
+      newAllocs.forEach((a) => {
+        if (a.serverId) copy.set(a.serverId, nowTs + 900);
+      });
+      return copy;
+    });
+  }, [lastAllocations, lastAllocationsTs]);
+
+  // Periodically prune expired highlights
+  useEffect(() => {
+    const id = setInterval(() => {
+      const nowTs = Date.now();
+      setHighlightedServers((prev) => {
+        if (!prev || prev.size === 0) return prev;
+        const copy = new Map(prev);
+        for (const [k, expiry] of copy.entries()) {
+          if (expiry <= nowTs) copy.delete(k);
+        }
+        return copy;
+      });
+    }, 200);
+    return () => clearInterval(id);
   }, []);
 
   // Calculate total available resources
@@ -328,6 +386,7 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
           <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
             {servers.map((s) => {
               const isUnsafe = unsafeServerIds.has(s._id);
+              const isHighlighted = highlightedServers && highlightedServers.has(s._id);
               return (
                 <Paper
                   key={s._id}
@@ -341,14 +400,19 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
                     cursor: "pointer",
                     border: isUnsafe ? "2px solid rgba(239,68,68,0.9)" : "1px solid rgba(255,255,255,0.06)",
                     background: isUnsafe ? "rgba(239,68,68,0.04)" : "rgba(255,255,255,0.02)",
-                    transition: "transform 160ms ease",
+                    transition: "transform 160ms ease, box-shadow 260ms ease",
                     '&:hover': { transform: 'translateY(-3px)' },
                     '@keyframes pulse': {
                       '0%': { boxShadow: '0 0 0 0 rgba(239,68,68,0.6)' },
                       '70%': { boxShadow: '0 0 0 8px rgba(239,68,68,0)' },
                       '100%': { boxShadow: '0 0 0 0 rgba(239,68,68,0)' },
                     },
-                    animation: isUnsafe ? 'pulse 1.6s infinite' : 'none',
+                    '@keyframes allocationFlash': {
+                      '0%': { boxShadow: '0 0 0 0 rgba(76,201,240,0.9)' },
+                      '60%': { boxShadow: '0 0 12px 8px rgba(76,201,240,0.15)' },
+                      '100%': { boxShadow: '0 0 0 0 rgba(76,201,240,0)' },
+                    },
+                    animation: isHighlighted ? 'allocationFlash 900ms ease-out' : (isUnsafe ? 'pulse 1.6s infinite' : 'none'),
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -365,9 +429,71 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
         {/* Allocation Timeline */}
         {lastAllocations && lastAllocations.length > 0 && (
           <Paper sx={{ p: 2, mt: 2, background: "rgba(255,255,255,0.02)", borderRadius: 2 }}>
-            <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "text.secondary", mb: 1 }}>
-              🕒 Recent Allocations
-            </Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+              <Typography sx={{ fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", color: "text.secondary" }}>
+                🕒 Recent Allocations
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel id="alloc-ttl-label">TTL</InputLabel>
+                  <Select
+                    labelId="alloc-ttl-label"
+                    value={allocationsTtlMs}
+                    label="TTL"
+                    onChange={(e) => setAllocationsTtlMs(Number(e.target.value))}
+                    sx={{ height: 40 }}
+                  >
+                    <MenuItem value={10000}>10s</MenuItem>
+                    <MenuItem value={30000}>30s</MenuItem>
+                    <MenuItem value={60000}>60s</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Button size="small" variant="outlined" onClick={() => setClearConfirmOpen(true)} sx={{ textTransform: 'none' }}>
+                  Clear
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Dialog open={clearConfirmOpen} onClose={() => setClearConfirmOpen(false)}>
+              <DialogTitle>Clear Recent Allocations?</DialogTitle>
+              <DialogContent>
+                <Typography>Are you sure you want to clear the recent allocations timeline? You can undo this action for a few seconds.</Typography>
+              </DialogContent>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, p: 2 }}>
+                <Button onClick={() => setClearConfirmOpen(false)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => {
+                    setPrevAllocations(lastAllocations || []);
+                    clearAllocations();
+                    setClearConfirmOpen(false);
+                    setSnackbarOpen(true);
+                  }}
+                >
+                  Clear
+                </Button>
+              </Box>
+            </Dialog>
+
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={5000}
+              onClose={() => setSnackbarOpen(false)}
+              message="Allocations cleared"
+              action={
+                <>
+                  <Button color="inherit" size="small" onClick={() => {
+                    if (prevAllocations) setLastAllocations(prevAllocations);
+                    setSnackbarOpen(false);
+                  }}>Undo</Button>
+                  <IconButton size="small" aria-label="close" color="inherit" onClick={() => setSnackbarOpen(false)}>
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </>
+              }
+            />
             <Stack spacing={1}>
               {lastAllocations.slice(-8).reverse().map((a, idx) => {
                 const task = a.task || {};

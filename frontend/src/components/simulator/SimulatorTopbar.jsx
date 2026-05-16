@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
+  IconButton,
   Stack,
   Typography,
   ToggleButton,
@@ -20,6 +21,11 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
+import SkipNextRoundedIcon from "@mui/icons-material/SkipNextRounded";
+import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
+import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 
 import { useViewMode } from "../../context/ViewModeContext";
 import { useRoom } from "../../context/RoomContext";
@@ -47,6 +53,7 @@ function SimulatorTopbar({
     autoScalingEnabled,
     toggleDeadlockForRoom,
     deadlockEnabled,
+    stepSchedulerForRoom,
   } = useSimulator();
   const { loading } = useSimulator();
   const navigate = useNavigate();
@@ -57,6 +64,9 @@ function SimulatorTopbar({
   const [isTogglingAutoScaling, setIsTogglingAutoScaling] = useState(false);
   const [isTogglingDeadlock, setIsTogglingDeadlock] = useState(false);
   const [deadlockConfirmOpen, setDeadlockConfirmOpen] = useState(false);
+  const [isAutoStepping, setIsAutoStepping] = useState(false);
+  const [autoStepIntervalId, setAutoStepIntervalId] = useState(null);
+  const [stepIntervalMs, setStepIntervalMs] = useState(1500);
 
   const handleLeaveRoom = () => {
     clearRoom();
@@ -107,6 +117,32 @@ function SimulatorTopbar({
     } finally {
       setIsTogglingDeadlock(false);
       setDeadlockConfirmOpen(false);
+    }
+  };
+
+  const handleStep = async () => {
+    try {
+      await stepSchedulerForRoom();
+    } catch (err) {
+      console.error("Step scheduler failed:", err);
+    }
+  };
+
+  const handlePlay = () => {
+    if (isAutoStepping) return;
+    setIsAutoStepping(true);
+    // default interval 1500ms
+    const id = window.setInterval(() => {
+      stepSchedulerForRoom().catch(console.error);
+    }, Number(stepIntervalMs) || 1500);
+    setAutoStepIntervalId(id);
+  };
+
+  const handlePause = () => {
+    setIsAutoStepping(false);
+    if (autoStepIntervalId) {
+      clearInterval(autoStepIntervalId);
+      setAutoStepIntervalId(null);
     }
   };
 
@@ -297,6 +333,51 @@ function SimulatorTopbar({
                   px: 1.5,
                 }}
               />
+
+              <IconButton
+                aria-label="play"
+                onClick={handlePlay}
+                size="large"
+                color={isAutoStepping ? "primary" : "default"}
+                sx={{ ml: 0.5 }}
+              >
+                <PlayArrowRoundedIcon />
+              </IconButton>
+
+              <IconButton
+                aria-label="pause"
+                onClick={handlePause}
+                size="large"
+                sx={{ ml: 0.5 }}
+              >
+                <PauseRoundedIcon />
+              </IconButton>
+
+              <IconButton
+                aria-label="step"
+                onClick={handleStep}
+                size="large"
+                sx={{ ml: 0.5 }}
+              >
+                <SkipNextRoundedIcon />
+              </IconButton>
+
+              <FormControl size="small" sx={{ minWidth: 120, ml: 1 }}>
+                <InputLabel id="step-interval-label">Interval</InputLabel>
+                <Select
+                  labelId="step-interval-label"
+                  value={stepIntervalMs}
+                  label="Interval"
+                  onChange={(e) => setStepIntervalMs(Number(e.target.value))}
+                  sx={{ height: 40 }}
+                >
+                  <MenuItem value={500}>500ms</MenuItem>
+                  <MenuItem value={750}>750ms</MenuItem>
+                  <MenuItem value={1000}>1s</MenuItem>
+                  <MenuItem value={1500}>1.5s</MenuItem>
+                  <MenuItem value={2000}>2s</MenuItem>
+                </Select>
+              </FormControl>
 
               <Chip
                 label={deadlockEnabled ? "Deadlock SIM ON" : "Deadlock SIM OFF"}

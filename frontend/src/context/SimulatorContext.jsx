@@ -20,7 +20,7 @@ import {
   createServer,
 } from "../api/servers.api";
 import { connectSocket, disconnectSocket } from "../api/socket";
-import { triggerScheduler } from "../api/scheduler.api";
+import { triggerScheduler, stepScheduler } from "../api/scheduler.api";
 import { toggleAutoScaling, getRoom } from "../api/rooms.api";
 
 const SimulatorContext = createContext(null);
@@ -39,6 +39,7 @@ export function SimulatorProvider({ children }) {
   const [deadlockEnabled, setDeadlockEnabled] = useState(false);
   const [lastAllocations, setLastAllocations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [allocationsTtlMs, setAllocationsTtlMs] = useState(30 * 1000); // keep allocations for 30s by default
 
   const syncVisibilityState = async () => {
     if (!roomId) return;
@@ -174,6 +175,18 @@ export function SimulatorProvider({ children }) {
     if (!roomId) return;
     return triggerScheduler(roomId);
   };
+
+  const stepSchedulerForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const res = await stepScheduler(roomId);
+      return res;
+    } catch (err) {
+      console.error("Failed to step scheduler:", err);
+    }
+  };
+
+  const clearAllocations = () => setLastAllocations([]);
 
   const toggleAutoScalingForRoom = async () => {
     if (!roomId) return;
@@ -313,13 +326,20 @@ export function SimulatorProvider({ children }) {
         try {
           if (payload && Array.isArray(payload.allocations)) {
             const stamped = (payload.allocations || []).map((a) => ({ ...a, ts: Date.now() }));
-            setLastAllocations(stamped);
+            setLastAllocations((prev) => {
+              // merge and keep recent ones
+              const merged = Array.isArray(prev) ? prev.concat(stamped) : stamped;
+              // keep up to 200 entries
+              return merged.slice(-200);
+            });
           }
         } catch (e) {
           /* ignore */
         }
         syncState().catch(console.error);
       };
+
+      
 
       const handleInit = (data) => {
         if (data.tasks) setTasks(data.tasks || []);
@@ -436,6 +456,20 @@ export function SimulatorProvider({ children }) {
     return () => unsub();
   }, []);
 
+  // Periodically prune old allocations beyond TTL
+  useEffect(() => {
+    const id = setInterval(() => {
+      setLastAllocations((prev) => {
+        if (!prev || prev.length === 0) return prev;
+        const cutoff = Date.now() - (allocationsTtlMs || 0);
+        const kept = prev.filter((a) => (a.ts || 0) >= cutoff);
+        if (kept.length === prev.length) return prev;
+        return kept;
+      });
+    }, 2000);
+    return () => clearInterval(id);
+  }, [allocationsTtlMs]);
+
   const value = useMemo(
     () => ({
       tasks,
@@ -469,11 +503,20 @@ export function SimulatorProvider({ children }) {
       clearTaskLogsForRoom,
       resetServersForRoom,
       runScheduler,
+      stepSchedulerForRoom,
+      clearAllocations,
+      allocationsTtlMs,
+      setAllocationsTtlMs,
+      setLastAllocations,
       toggleAutoScalingForRoom,
       toggleDeadlockForRoom,
       autoScalingEnabled,
       deadlockEnabled,
       lastAllocations,
+      allocationsTtlMs,
+      clearAllocations,
+      setAllocationsTtlMs,
+      setLastAllocations,
       setTasks,
       setTaskLogs,
       setServers,
@@ -526,6 +569,11 @@ export function useSimulator() {
       clearTaskLogsForRoom: async () => {},
       resetServersForRoom: async () => {},
       runScheduler: async () => {},
+      stepSchedulerForRoom: async () => {},
+      clearAllocations: () => {},
+      allocationsTtlMs: 30000,
+      setAllocationsTtlMs: () => {},
+      setLastAllocations: () => {},
       toggleAutoScalingForRoom: async () => {},
       toggleDeadlockForRoom: async () => {},
       autoScalingEnabled: true,

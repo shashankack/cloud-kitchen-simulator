@@ -257,15 +257,27 @@ export async function completeTaskLogic(id, io, forceStatus = null) {
       server.usedCPU = Math.max(0, sumCPU);
       server.usedRAM = Math.max(0, sumRAM);
 
-      await server.save();
-
-      if (io) io.to(roomId).emit("server:updated", server);
+      try {
+        await server.save();
+        if (io) io.to(roomId).emit("server:updated", server);
+      } catch (serverErr) {
+        // The server may have been removed by a concurrent cleanup; still complete the task.
+        if (String(serverErr?.name || "") !== "DocumentNotFoundError") {
+          throw serverErr;
+        }
+      }
 
       // Auto-remove idle auto-scaled servers
       if (server.isAutoScaled && server.usedCPU === 0 && server.usedRAM === 0) {
-        await Server.findByIdAndDelete(serverId);
-        if (io) {
-          io.to(roomId).emit("server:removed", { serverId: server._id });
+        try {
+          await Server.findByIdAndDelete(serverId);
+          if (io) {
+            io.to(roomId).emit("server:removed", { serverId: server._id });
+          }
+        } catch (deleteErr) {
+          if (String(deleteErr?.name || "") !== "DocumentNotFoundError") {
+            throw deleteErr;
+          }
         }
       }
     }

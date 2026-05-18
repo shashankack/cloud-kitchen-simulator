@@ -14,9 +14,11 @@ const QueuePanel = () => {
   const { isKitchen } = useViewMode();
   const { tasks, loading } = useSimulator();
 
-  // Show only active tasks in the queue (waiting or running)
+  // Show only active tasks in the queue (waiting, running, or paused)
   const activeTasks = Array.isArray(tasks)
-    ? tasks.filter((t) => t.status === "waiting" || t.status === "running")
+    ? tasks.filter(
+        (t) => t.status === "waiting" || t.status === "running" || t.status === "paused",
+      )
     : [];
 
   return (

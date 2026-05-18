@@ -61,6 +61,7 @@ function StatsBar() {
   const { tasks = [], servers = [], loading } = useSimulator();
 
   const waitingTasks = tasks.filter((t) => t.status === "waiting").length;
+  const pausedTasks = tasks.filter((t) => t.status === "paused").length;
   const activeServers = servers.length;
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
@@ -80,7 +81,13 @@ function StatsBar() {
       icon: <PendingActionsRoundedIcon />,
       label: isKitchen ? "Waiting Orders" : "Waiting Tasks",
       value: loading ? "..." : String(waitingTasks).padStart(2, "0"),
-      helper: isKitchen ? "in order queue" : "in task queue",
+      helper: loading
+        ? "loading"
+        : pausedTasks > 0
+          ? `${pausedTasks} paused`
+          : isKitchen
+            ? "in order queue"
+            : "in task queue",
     },
     {
       icon: <MemoryRoundedIcon />,

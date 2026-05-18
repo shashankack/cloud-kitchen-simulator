@@ -1,10 +1,14 @@
-import { Box, Container, Grid, Stack, Snackbar, Alert } from "@mui/material";
-import { useState } from "react";
+import { Alert, Box, Container, Grid, Snackbar, Stack } from "@mui/material";
+import { Suspense, lazy, useState } from "react";
 
 import SimulatorTopbar from "../components/simulator/SimulatorTopbar";
 import QueuePanel from "../components/simulator/QueuePanel";
-import SimulationCanvas from "../components/simulator/SimulationCanvas";
-import BankersAlgorithmCanvas from "../components/simulator/BankersAlgorithmCanvas";
+const SimulationCanvas = lazy(
+  () => import("../components/simulator/SimulationCanvas"),
+);
+const BankersAlgorithmCanvas = lazy(
+  () => import("../components/simulator/BankersAlgorithmCanvas"),
+);
 import ServerGrid from "../components/simulator/ServerGrid";
 import StatsBar from "../components/simulator/StatsBar";
 import TaskLogPanel from "../components/simulator/TaskLogPanel";
@@ -42,11 +46,42 @@ function SimulatorPage() {
                 </Grid>
 
                 <Grid size={{ xs: 12, lg: 8.8 }}>
-                  {showBankersView ? (
-                    <BankersAlgorithmCanvas tasks={tasks} servers={servers} />
-                  ) : (
-                    <SimulationCanvas />
-                  )}
+                  <Suspense
+                    fallback={
+                      <Box sx={{ minHeight: 660, borderRadius: 4, p: 3 }}>
+                        <Stack spacing={2}>
+                          <Box
+                            sx={{
+                              height: 36,
+                              width: "40%",
+                              bgcolor: "rgba(255,255,255,0.08)",
+                              borderRadius: 1,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              height: 280,
+                              bgcolor: "rgba(255,255,255,0.05)",
+                              borderRadius: 3,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              height: 240,
+                              bgcolor: "rgba(255,255,255,0.04)",
+                              borderRadius: 3,
+                            }}
+                          />
+                        </Stack>
+                      </Box>
+                    }
+                  >
+                    {showBankersView ? (
+                      <BankersAlgorithmCanvas tasks={tasks} servers={servers} />
+                    ) : (
+                      <SimulationCanvas />
+                    )}
+                  </Suspense>
                 </Grid>
               </Grid>
 

@@ -123,6 +123,7 @@ export async function seedTasks(req, res) {
   try {
     const count = Number(req.body.count) || 6;
     const intensity = req.body.intensity || "normal";
+    const append = Boolean(req.body.append);
 
     if (count < 1) {
       return res.status(400).json({ error: "Task seed count must be at least 1" });
@@ -143,8 +144,10 @@ export async function seedTasks(req, res) {
       { name: "ML Inference", cpu: 10, ram: 24, priority: 1, executionTime: 45 },
     ];
 
-    // Remove existing tasks for room before seeding
-    await Task.deleteMany({ roomId: req.roomId });
+    // Remove existing tasks for room before seeding unless append requested
+    if (!append) {
+      await Task.deleteMany({ roomId: req.roomId });
+    }
 
     const profile = getSeedIntensityProfile(intensity);
 
@@ -174,9 +177,11 @@ export async function seedTasks(req, res) {
 
     // Batch insert to allow progress updates and avoid huge single ops
     const batchSize = Math.max(50, Math.min(500, Math.ceil(docs.length / 10)));
+    const insertedIds = [];
     for (let i = 0; i < docs.length; i += batchSize) {
       const batch = docs.slice(i, i + batchSize);
-      await Task.insertMany(batch, { ordered: true });
+      const inserted = await Task.insertMany(batch, { ordered: true });
+      for (const d of inserted) insertedIds.push(d._id);
 
       if (io) {
         const done = Math.min(i + batch.length, docs.length);
@@ -185,7 +190,24 @@ export async function seedTasks(req, res) {
       }
     }
 
-    // Populate all tasks before sending
+    if (append) {
+      // When appending, return and emit only the newly created tasks to avoid huge payloads
+      const newDocs = await Task.find({ _id: { $in: insertedIds } })
+        .populate("assignedServer")
+        .sort({ createdAt: -1 });
+
+      if (io) {
+        // Emit appended tasks with a flag so clients can merge instead of replacing
+        io.to(req.roomId).emit("tasks:seeded", { appended: true, tasks: newDocs });
+        io.to(req.roomId).emit("seed:progress", { stage: "finish" });
+        // run scheduler after seeding
+        runSchedulerLogic(io, req.roomId).catch(console.error);
+      }
+
+      return res.json(newDocs);
+    }
+
+    // Populate all tasks before sending (non-append behavior)
     const populatedDocs = await Task.find({ roomId: req.roomId })
       .populate("assignedServer")
       .sort({ createdAt: -1 });
@@ -249,6 +271,9 @@ export async function completeTaskLogic(id, io, forceStatus = null) {
     }
   }
 
+  task.remainingExecutionMs = null;
+  task.pausedAt = null;
+
   // 15% random failure chance simulation, unless forcefully setting status
   if (forceStatus) {
     task.status = forceStatus;
@@ -288,6 +313,86 @@ export async function completeTaskLogic(id, io, forceStatus = null) {
   if (io) io.to(roomId).emit("log:created", log);
 
   return populatedTask;
+}
+
+export async function abortTask(req, res) {
+  try {
+    const { id } = req.params;
+    const io = req.app && req.app.get("io");
+
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    if (task.roomId !== req.roomId) {
+      return res.status(403).json({ error: "Task does not belong to this room" });
+    }
+
+    if (!["running", "paused"].includes(task.status)) {
+      return res.status(400).json({ error: "Only running or paused tasks can be aborted" });
+    }
+
+    try { cancelScheduledCompletion(task._id); } catch (e) { /* ignore */ }
+
+    let serverName = "Unknown";
+    if (task.assignedServer) {
+      const server = await Server.findById(task.assignedServer);
+      if (server) {
+        serverName = server.name;
+        const remainingTasks = await Task.find({
+          roomId: req.roomId,
+          assignedServer: server._id,
+          status: { $in: ["running", "paused"] },
+          _id: { $ne: task._id },
+        });
+
+        server.usedCPU = remainingTasks.reduce((acc, t) => acc + (t.cpu || 0), 0);
+        server.usedRAM = remainingTasks.reduce((acc, t) => acc + (t.ram || 0), 0);
+        await server.save();
+
+        if (io) io.to(req.roomId).emit("server:updated", server);
+
+        if (server.isAutoScaled && server.usedCPU === 0 && server.usedRAM === 0) {
+          await Server.findByIdAndDelete(server._id);
+          if (io) io.to(req.roomId).emit("server:removed", { serverId: server._id });
+        }
+      }
+    }
+
+    task.status = "failed";
+    task.startedAt = null;
+    task.pausedAt = null;
+    task.remainingExecutionMs = null;
+    task.failureReason = "Manually aborted to resolve a deadlock";
+    task.assignedServer = null;
+    task.allocationMethod = null;
+    await task.save();
+
+    const log = new TaskLog({
+      roomId: req.roomId,
+      taskId: task._id,
+      taskName: task.name,
+      serverId: null,
+      serverName,
+      status: task.status,
+      cpu: task.cpu,
+      ram: task.ram,
+      executionTime: task.executionTime,
+      waitTime: Math.max(0, (Date.now() - new Date(task.createdAt).getTime()) / 1000),
+    });
+    await log.save();
+
+    const populatedTask = await task.populate("assignedServer");
+    if (io) {
+      io.to(req.roomId).emit("task:updated", populatedTask);
+      io.to(req.roomId).emit("log:created", log);
+    }
+
+    res.json(populatedTask);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
 export async function retryTask(req, res) {

@@ -207,7 +207,9 @@ function SimulationCanvas() {
   const layoutSeedRef = useRef(Math.random() * 10000);
 
   const waitingTasks = tasks.filter((task) => task.status === "waiting");
-  const runningTasks = tasks.filter((task) => task.status === "running");
+  const runningTasks = tasks.filter(
+    (task) => task.status === "running" || task.status === "paused",
+  );
 
   const { nodes, edges } = useMemo(() => {
     const hasActivity = waitingTasks.length > 0 || runningTasks.length > 0;

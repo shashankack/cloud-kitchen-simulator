@@ -1,5 +1,5 @@
 // components/simulator/SimulatorTopbar.jsx
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
   DialogActions,
   Skeleton,
   Chip,
+  Tooltip,
 } from "@mui/material";
 
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -22,10 +23,6 @@ import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
-import SkipNextRoundedIcon from "@mui/icons-material/SkipNextRounded";
-import TimerRoundedIcon from "@mui/icons-material/TimerRounded";
-import { MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 
 import { useViewMode } from "../../context/ViewModeContext";
 import { useRoom } from "../../context/RoomContext";
@@ -38,35 +35,70 @@ import ServerSeedDialog from "./dialogs/ServerSeedDialog";
 
 import TaskControlsMenu from "./controls/TaskControlsMenu";
 import ServerControlsMenu from "./controls/ServerControlsMenu";
-// Scheduler controls moved into canvas; menu removed from topbar
 
 function SimulatorTopbar({
   showBankersView = false,
   onToggleBankersView = () => {},
 }) {
   const { isKitchen } = useViewMode();
-  const { roomName, clearRoom } = useRoom();
+  const { roomName, clearRoom, roomId } = useRoom();
   const {
+    tasks,
+    servers,
+    loading,
     resetTasksForRoom,
     resetServersForRoom,
     toggleAutoScalingForRoom,
     autoScalingEnabled,
     toggleDeadlockForRoom,
     deadlockEnabled,
-    stepSchedulerForRoom,
+    resumeSchedulerForRoom,
   } = useSimulator();
-  const { loading } = useSimulator();
   const navigate = useNavigate();
+
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [serverDialogOpen, setServerDialogOpen] = useState(false);
   const [taskSeedOpen, setTaskSeedOpen] = useState(false);
+  const [appendTaskSeedOpen, setAppendTaskSeedOpen] = useState(false);
   const [serverSeedOpen, setServerSeedOpen] = useState(false);
   const [isTogglingAutoScaling, setIsTogglingAutoScaling] = useState(false);
   const [isTogglingDeadlock, setIsTogglingDeadlock] = useState(false);
   const [deadlockConfirmOpen, setDeadlockConfirmOpen] = useState(false);
-  const [isAutoStepping, setIsAutoStepping] = useState(false);
-  const [autoStepIntervalId, setAutoStepIntervalId] = useState(null);
-  const [stepIntervalMs, setStepIntervalMs] = useState(1500);
+  const [schedulerActionBusy, setSchedulerActionBusy] = useState(false);
+  const schedulerActionBusyRef = useRef(false);
+  const schedulerActionTimerRef = useRef(null);
+
+  const waitingTasks = Array.isArray(tasks)
+    ? tasks.filter((task) => task.status === "waiting")
+    : [];
+  const runningTasks = Array.isArray(tasks)
+    ? tasks.filter((task) => task.status === "running")
+    : [];
+  const pausedTasks = Array.isArray(tasks)
+    ? tasks.filter((task) => task.status === "paused")
+    : [];
+  const hasWaiting = waitingTasks.length > 0;
+  const hasSchedulerWork = hasWaiting || pausedTasks.length > 0;
+  const canRewind = runningTasks.length > 0 || pausedTasks.length > 0;
+
+  const runSchedulerAction = async (action) => {
+    if (schedulerActionBusyRef.current) return;
+    schedulerActionBusyRef.current = true;
+    setSchedulerActionBusy(true);
+
+    try {
+      await action();
+    } finally {
+      if (schedulerActionTimerRef.current) {
+        window.clearTimeout(schedulerActionTimerRef.current);
+      }
+      schedulerActionTimerRef.current = window.setTimeout(() => {
+        schedulerActionBusyRef.current = false;
+        setSchedulerActionBusy(false);
+        schedulerActionTimerRef.current = null;
+      }, 500);
+    }
+  };
 
   const handleLeaveRoom = () => {
     clearRoom();
@@ -120,31 +152,20 @@ function SimulatorTopbar({
     }
   };
 
-  const handleStep = async () => {
-    try {
-      await stepSchedulerForRoom();
-    } catch (err) {
-      console.error("Step scheduler failed:", err);
-    }
+  const handlePlay = async () => {
+    await runSchedulerAction(async () => {
+      await resumeSchedulerForRoom();
+    });
   };
 
-  const handlePlay = () => {
-    if (isAutoStepping) return;
-    setIsAutoStepping(true);
-    // default interval 1500ms
-    const id = window.setInterval(() => {
-      stepSchedulerForRoom().catch(console.error);
-    }, Number(stepIntervalMs) || 1500);
-    setAutoStepIntervalId(id);
-  };
-
-  const handlePause = () => {
-    setIsAutoStepping(false);
-    if (autoStepIntervalId) {
-      clearInterval(autoStepIntervalId);
-      setAutoStepIntervalId(null);
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (schedulerActionTimerRef.current) {
+        window.clearTimeout(schedulerActionTimerRef.current);
+      }
+      schedulerActionBusyRef.current = false;
+    };
+  }, []);
 
   return (
     <>
@@ -259,12 +280,10 @@ function SimulatorTopbar({
                 borderRadius: "16px",
                 background: "rgba(255,255,255,0.05)",
                 border: "1px solid rgba(255,255,255,0.1)",
-
                 "& .MuiToggleButtonGroup-grouped": {
                   margin: 0,
                   border: "0 !important",
                 },
-
                 "& .MuiToggleButton-root": {
                   minHeight: 44,
                   px: { xs: 1.2, sm: 1.6 },
@@ -278,15 +297,10 @@ function SimulatorTopbar({
                   whiteSpace: "nowrap",
                   transition: "background 180ms ease, color 180ms ease",
                   justifyContent: "center",
-
-                  "&:hover": {
-                    background: "rgba(255,255,255,0.08)",
-                  },
-
+                  "&:hover": { background: "rgba(255,255,255,0.08)" },
                   "&.Mui-selected": {
                     color: "primary.main",
                     background: "rgba(76,201,240,0.15)",
-
                     "&:hover": {
                       background: "rgba(76,201,240,0.2)",
                     },
@@ -306,7 +320,7 @@ function SimulatorTopbar({
             </ToggleButtonGroup>
 
             <Stack
-              direction={{ xs: "row", sm: "row" }}
+              direction={{ xs: "column", sm: "row" }}
               spacing={1.2}
               sx={{
                 width: { xs: "100%", md: "auto" },
@@ -334,51 +348,6 @@ function SimulatorTopbar({
                 }}
               />
 
-              <IconButton
-                aria-label="play"
-                onClick={handlePlay}
-                size="large"
-                color={isAutoStepping ? "primary" : "default"}
-                sx={{ ml: 0.5 }}
-              >
-                <PlayArrowRoundedIcon />
-              </IconButton>
-
-              <IconButton
-                aria-label="pause"
-                onClick={handlePause}
-                size="large"
-                sx={{ ml: 0.5 }}
-              >
-                <PauseRoundedIcon />
-              </IconButton>
-
-              <IconButton
-                aria-label="step"
-                onClick={handleStep}
-                size="large"
-                sx={{ ml: 0.5 }}
-              >
-                <SkipNextRoundedIcon />
-              </IconButton>
-
-              <FormControl size="small" sx={{ minWidth: 120, ml: 1 }}>
-                <InputLabel id="step-interval-label">Interval</InputLabel>
-                <Select
-                  labelId="step-interval-label"
-                  value={stepIntervalMs}
-                  label="Interval"
-                  onChange={(e) => setStepIntervalMs(Number(e.target.value))}
-                  sx={{ height: 40 }}
-                >
-                  <MenuItem value={500}>500ms</MenuItem>
-                  <MenuItem value={750}>750ms</MenuItem>
-                  <MenuItem value={1000}>1s</MenuItem>
-                  <MenuItem value={1500}>1.5s</MenuItem>
-                  <MenuItem value={2000}>2s</MenuItem>
-                </Select>
-              </FormControl>
-
               <Chip
                 label={deadlockEnabled ? "Deadlock SIM ON" : "Deadlock SIM OFF"}
                 onClick={() => setDeadlockConfirmOpen(true)}
@@ -405,8 +374,8 @@ function SimulatorTopbar({
                 </DialogTitle>
                 <DialogContent>
                   <Typography>
-                    Enabling Deadlock Simulation will bypass the Banker's safety
-                    check and allow allocations which may lead to a
+                    Enabling Deadlock Simulation will bypass the Banker&apos;s
+                    safety check and allow allocations which may lead to a
                     deadlock-like state. Proceed only for testing.
                   </Typography>
                 </DialogContent>
@@ -435,13 +404,16 @@ function SimulatorTopbar({
               <TaskControlsMenu
                 onCreateTask={() => setTaskDialogOpen(true)}
                 onSeedTasks={() => setTaskSeedOpen(true)}
+                onAppendTasks={() => setAppendTaskSeedOpen(true)}
                 onResetTasks={handleResetTasks}
+                taskCount={Array.isArray(tasks) ? tasks.length : 0}
               />
 
               <ServerControlsMenu
                 onCreateServer={() => setServerDialogOpen(true)}
                 onSeedServers={() => setServerSeedOpen(true)}
                 onResetServers={handleResetServers}
+                serverCount={Array.isArray(servers) ? servers.length : 0}
               />
             </Stack>
           </Stack>
@@ -458,6 +430,11 @@ function SimulatorTopbar({
         <TaskSeedDialog
           open={taskSeedOpen}
           onClose={() => setTaskSeedOpen(false)}
+        />
+        <TaskSeedDialog
+          open={appendTaskSeedOpen}
+          onClose={() => setAppendTaskSeedOpen(false)}
+          append={true}
         />
         <ServerSeedDialog
           open={serverSeedOpen}

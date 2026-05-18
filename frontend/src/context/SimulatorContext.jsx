@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { Snackbar, Alert } from "@mui/material";
 import progressService from "../utils/progressService";
 import { useRoom } from "./RoomContext";
 import {
@@ -20,8 +21,15 @@ import {
   createServer,
 } from "../api/servers.api";
 import { connectSocket, disconnectSocket } from "../api/socket";
-import { triggerScheduler, stepScheduler } from "../api/scheduler.api";
-import { toggleAutoScaling, getRoom } from "../api/rooms.api";
+import {
+  triggerScheduler,
+  stepScheduler,
+  pauseScheduler,
+  resumeScheduler,
+  rewindScheduler,
+} from "../api/scheduler.api";
+import { toggleAutoScaling, toggleDeadlock, getRoom } from "../api/rooms.api";
+import { abortTask } from "../api/tasks.api";
 
 const SimulatorContext = createContext(null);
 
@@ -40,6 +48,7 @@ export function SimulatorProvider({ children }) {
   const [lastAllocations, setLastAllocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [allocationsTtlMs, setAllocationsTtlMs] = useState(30 * 1000); // keep allocations for 30s by default
+  const [toast, setToast] = useState(null);
 
   const syncVisibilityState = async () => {
     if (!roomId) return;
@@ -145,10 +154,25 @@ export function SimulatorProvider({ children }) {
     return docs;
   };
 
-  const seedTasksForRoom = async (count = 6, intensity = "normal") => {
+  const seedTasksForRoom = async (count = 6, intensity = "normal", append = false) => {
     if (!roomId) return;
-    const docs = await seedTasks(roomId, count, intensity);
-    setTasks(docs);
+    const docs = await seedTasks(roomId, count, intensity, append);
+    if (append) {
+      setTasks((prev) => {
+        // prepend new docs so newest appear first
+        const newDocs = Array.isArray(docs) ? docs : [];
+        const existing = Array.isArray(prev) ? prev : [];
+        const byId = new Map();
+        // add new first
+        for (const t of newDocs) byId.set(String(t._id), t);
+        for (const t of existing) {
+          if (!byId.has(String(t._id))) byId.set(String(t._id), t);
+        }
+        return Array.from(byId.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      });
+    } else {
+      setTasks(docs);
+    }
     return docs;
   };
 
@@ -186,6 +210,46 @@ export function SimulatorProvider({ children }) {
     }
   };
 
+  const pauseSchedulerForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const res = await pauseScheduler(roomId);
+      return res;
+    } catch (err) {
+      console.error("Failed to pause scheduler:", err);
+    }
+  };
+
+  const resumeSchedulerForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const res = await resumeScheduler(roomId);
+      return res;
+    } catch (err) {
+      console.error("Failed to resume scheduler:", err);
+    }
+  };
+
+  const rewindSchedulerForRoom = async () => {
+    if (!roomId) return;
+    try {
+      const res = await rewindScheduler(roomId);
+      return res;
+    } catch (err) {
+      console.error("Failed to rewind scheduler:", err);
+    }
+  };
+
+  const abortTaskForRoom = async (taskId) => {
+    if (!roomId || !taskId) return;
+    try {
+      const res = await abortTask(roomId, taskId);
+      return res;
+    } catch (err) {
+      console.error("Failed to abort task:", err);
+    }
+  };
+
   const clearAllocations = () => setLastAllocations([]);
 
   const toggleAutoScalingForRoom = async () => {
@@ -202,7 +266,6 @@ export function SimulatorProvider({ children }) {
   const toggleDeadlockForRoom = async () => {
     if (!roomId) return;
     try {
-      const { toggleDeadlock } = await import("../api/rooms.api");
       const result = await toggleDeadlock(roomId);
       // backend responds with { allowUnsafeAllocation: boolean }
       setDeadlockEnabled(result.allowUnsafeAllocation);
@@ -269,8 +332,35 @@ export function SimulatorProvider({ children }) {
         setTasks((prev) => [task, ...prev]);
       };
 
-      const handleTasksSeeded = (docs) => {
-        setTasks(docs || []);
+      const handleTasksSeeded = (payload) => {
+        try {
+          if (!payload) return;
+          // Support both legacy array payloads and new { appended, tasks } objects
+          if (Array.isArray(payload)) {
+            setTasks(payload || []);
+            return;
+          }
+
+          const appended = Boolean(payload.appended);
+          const docs = Array.isArray(payload.tasks) ? payload.tasks : [];
+
+          if (appended) {
+            setTasks((prev) => {
+              const newDocs = docs;
+              const existing = Array.isArray(prev) ? prev : [];
+              const byId = new Map();
+              for (const t of newDocs) byId.set(String(t._id), t);
+              for (const t of existing) {
+                if (!byId.has(String(t._id))) byId.set(String(t._id), t);
+              }
+              return Array.from(byId.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            });
+          } else {
+            setTasks(docs || []);
+          }
+        } catch (e) {
+          console.error("Failed handling tasks:seeded payload:", e);
+        }
       };
 
       const handleServerCreated = (server) => {
@@ -504,6 +594,10 @@ export function SimulatorProvider({ children }) {
       resetServersForRoom,
       runScheduler,
       stepSchedulerForRoom,
+      pauseSchedulerForRoom,
+      resumeSchedulerForRoom,
+      rewindSchedulerForRoom,
+      abortTaskForRoom,
       clearAllocations,
       allocationsTtlMs,
       setAllocationsTtlMs,
@@ -520,8 +614,12 @@ export function SimulatorProvider({ children }) {
       setTasks,
       setTaskLogs,
       setServers,
+      showToast: (msg, severity = "info", duration = 3000) => {
+        setToast({ open: true, msg, severity, duration });
+      },
     }),
     [
+      roomId,
       tasks,
       taskLogs,
       servers,
@@ -532,12 +630,46 @@ export function SimulatorProvider({ children }) {
       autoScalingEnabled,
       deadlockEnabled,
       lastAllocations,
+      allocationsTtlMs,
+      addTask,
+      retryTaskForRoom,
+      retryAllFailedTasksForRoom,
+      addServer,
+      addAutoScaledServer,
+      cleanupIdleAutoScaledServers,
+      seedServersForRoom,
+      seedServersForRoomCount,
+      seedTasksForRoom,
+      resetTasksForRoom,
+      clearTaskLogsForRoom,
+      resetServersForRoom,
+      runScheduler,
+      stepSchedulerForRoom,
+      pauseSchedulerForRoom,
+      resumeSchedulerForRoom,
+      rewindSchedulerForRoom,
+      abortTaskForRoom,
+      clearAllocations,
+      setAllocationsTtlMs,
+      setLastAllocations,
+      toggleAutoScalingForRoom,
+      toggleDeadlockForRoom,
     ],
   );
 
   return (
     <SimulatorContext.Provider value={value}>
       {children}
+      <Snackbar
+        open={toast?.open || false}
+        autoHideDuration={toast?.duration || 3000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert onClose={() => setToast(null)} severity={toast?.severity || "info"} sx={{ width: "100%" }}>
+          {toast?.msg}
+        </Alert>
+      </Snackbar>
     </SimulatorContext.Provider>
   );
 }
@@ -570,6 +702,10 @@ export function useSimulator() {
       resetServersForRoom: async () => {},
       runScheduler: async () => {},
       stepSchedulerForRoom: async () => {},
+      pauseSchedulerForRoom: async () => {},
+      resumeSchedulerForRoom: async () => {},
+      rewindSchedulerForRoom: async () => {},
+      abortTaskForRoom: async () => {},
       clearAllocations: () => {},
       allocationsTtlMs: 30000,
       setAllocationsTtlMs: () => {},

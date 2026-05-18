@@ -44,6 +44,13 @@ export const retryTask = async (roomId, taskId) => {
   return res.data;
 };
 
+export const abortTask = async (roomId, taskId) => {
+  const res = await axiosClient.post(`/tasks/${taskId}/abort`, {
+    roomId,
+  });
+  return res.data;
+};
+
 export const retryAllFailedTasks = async (roomId) => {
   const res = await axiosClient.post(`/tasks/retry-all-failed`, {
     roomId,
@@ -51,11 +58,17 @@ export const retryAllFailedTasks = async (roomId) => {
   return res.data;
 };
 
-export const seedTasks = async (roomId, count = 6, intensity = "normal") => {
+export const seedTasks = async (
+  roomId,
+  count = 6,
+  intensity = "normal",
+  append = false,
+) => {
   const res = await axiosClient.post(`/tasks/seed`, {
     roomId,
     count,
     intensity,
+    append,
   });
   return res.data;
 };

@@ -7,6 +7,7 @@ export default function ServerControlsMenu({
   onCreateServer,
   onSeedServers,
   onResetServers,
+  serverCount = 0,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const { isKitchen } = useViewMode();
@@ -31,7 +32,7 @@ export default function ServerControlsMenu({
 
   return (
     <>
-      <Button variant="outlined" size="small" onClick={handleClick}>
+      <Button variant="outlined" size="small" onClick={handleClick} fullWidth>
         {isKitchen ? "Chef Controls" : "Server Controls"}{" "}
         <MoreVertRoundedIcon sx={{ ml: 0.5 }} />
       </Button>
@@ -42,7 +43,11 @@ export default function ServerControlsMenu({
         <MenuItem onClick={handleSeedServers}>
           {isKitchen ? "Seed Chefs" : "Seed Servers"}
         </MenuItem>
-        <MenuItem onClick={handleResetServers} sx={{ color: "error.main" }}>
+        <MenuItem
+          onClick={handleResetServers}
+          sx={{ color: "error.main" }}
+          disabled={serverCount === 0}
+        >
           {isKitchen ? "Reset All Chefs" : "Reset All Servers"}
         </MenuItem>
       </Menu>

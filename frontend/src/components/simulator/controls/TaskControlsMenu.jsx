@@ -6,7 +6,9 @@ import { useViewMode } from "../../../context/ViewModeContext";
 export default function TaskControlsMenu({
   onCreateTask,
   onSeedTasks,
+  onAppendTasks,
   onResetTasks,
+  taskCount = 0,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const { isKitchen } = useViewMode();
@@ -42,7 +44,14 @@ export default function TaskControlsMenu({
         <MenuItem onClick={handleSeedTasks}>
           {isKitchen ? "Seed Orders" : "Seed Tasks"}
         </MenuItem>
-        <MenuItem onClick={handleResetTasks} sx={{ color: "error.main" }}>
+          <MenuItem onClick={() => { onAppendTasks && onAppendTasks(); handleClose(); }}>
+            {isKitchen ? "Append Orders" : "Append Tasks"}
+          </MenuItem>
+        <MenuItem
+          onClick={handleResetTasks}
+          sx={{ color: "error.main" }}
+          disabled={taskCount === 0}
+        >
           {isKitchen ? "Reset All Orders" : "Reset All Tasks"}
         </MenuItem>
       </Menu>

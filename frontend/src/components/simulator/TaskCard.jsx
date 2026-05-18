@@ -20,6 +20,11 @@ function TaskCard({ task, index }) {
   const { roomId } = useRoom();
 
   useEffect(() => {
+    if (task.status === "paused") {
+      setTimeLeft(Math.max(0, Math.ceil((task.remainingExecutionMs || 0) / 1000)));
+      return;
+    }
+
     if (task.status !== "running") {
       setTimeLeft(null);
       return;
@@ -53,7 +58,7 @@ function TaskCard({ task, index }) {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [task.status, task.startedAt, task.executionTime]);
+  }, [task.status, task.startedAt, task.executionTime, task.remainingExecutionMs]);
 
   const priorityLabel =
     task.priority === 1 ? "High" : task.priority === 2 ? "Medium" : "Low";
@@ -79,7 +84,9 @@ function TaskCard({ task, index }) {
             ? "primary.main"
             : task.status === "waiting"
               ? "info.main"
-              : "warning.main",
+              : task.status === "paused"
+                ? "warning.main"
+                : "warning.main",
         fontSize: "0.72rem",
         fontWeight: 900,
         textTransform: "uppercase",
@@ -92,6 +99,8 @@ function TaskCard({ task, index }) {
           : "Completing..."
         : task.status === "waiting"
           ? `${task.executionTime || 10}s`
+          : task.status === "paused" && timeLeft !== null
+            ? `${timeLeft}s paused`
           : task.status}
     </Typography>
   );

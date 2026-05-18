@@ -13,8 +13,8 @@ import {
 import { useSimulator } from "../../../context/SimulatorContext";
 const MAX_TASK_SEED_COUNT = 300;
 
-export default function TaskSeedDialog({ open, onClose }) {
-  const { seedTasksForRoom } = useSimulator();
+export default function TaskSeedDialog({ open, onClose, append = false }) {
+  const { seedTasksForRoom, resumeSchedulerForRoom } = useSimulator();
   const [count, setCount] = useState(6);
   const [intensity, setIntensity] = useState("normal");
   const [loading, setLoading] = useState(false);
@@ -80,11 +80,27 @@ export default function TaskSeedDialog({ open, onClose }) {
 
   const preview = computePreview(intensity);
 
+  const { showToast } = useSimulator();
+
   const handleSeed = async () => {
     setLoading(true);
     setError("");
     try {
-      await seedTasksForRoom(Number(count) || 6, intensity);
+      const docs = await seedTasksForRoom(Number(count) || 6, intensity, append);
+      const n = Array.isArray(docs) ? docs.length : 0;
+      showToast(
+        append ? `${n} tasks appended` : `${n} tasks seeded`,
+        "success",
+        4000,
+      );
+      try {
+        // Ensure scheduler is resumed after large seed operations
+        if (typeof resumeSchedulerForRoom === "function") {
+          await resumeSchedulerForRoom();
+        }
+      } catch (e) {
+        /* ignore */
+      }
       onClose();
     } catch (err) {
       setError(
@@ -98,7 +114,7 @@ export default function TaskSeedDialog({ open, onClose }) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Seed Tasks</DialogTitle>
+      <DialogTitle>{append ? "Append Tasks" : "Seed Tasks"}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography sx={{ color: "text.secondary" }}>

@@ -9,16 +9,30 @@ export const AUTO_SCALE_LIMITS = {
 };
 
 // In-memory registry to track scheduled auto-completion timers
-const scheduledCompletionTimers = new Map(); // taskId -> timeoutId
+const scheduledCompletionTimers = new Map(); // taskId -> { timeoutId, roomId, dueAt }
 // FIX: Prevent race condition in task completion - track tasks currently being completed
 const tasksBeingCompleted = new Set(); // taskId
 const schedulerRunsByRoom = new Map(); // roomId -> Promise
 
-export function scheduleAutoCompletion(taskId, io, delayMs) {
+function getRemainingExecutionMs(task) {
+  if (!task) return 0;
+  if (typeof task.remainingExecutionMs === "number" && task.remainingExecutionMs > 0) {
+    return task.remainingExecutionMs;
+  }
+
+  if (!task.startedAt) {
+    return Math.max(0, (task.executionTime || 0) * 1000);
+  }
+
+  const elapsedMs = Date.now() - new Date(task.startedAt).getTime();
+  return Math.max(0, (task.executionTime || 0) * 1000 - elapsedMs);
+}
+
+export function scheduleAutoCompletion(taskId, io, delayMs, roomId = null) {
   // clear existing if present
   const existing = scheduledCompletionTimers.get(String(taskId));
   if (existing) {
-    clearTimeout(existing);
+    clearTimeout(existing.timeoutId);
   }
 
   const timeoutId = setTimeout(async () => {
@@ -30,15 +44,19 @@ export function scheduleAutoCompletion(taskId, io, delayMs) {
     }
   }, delayMs);
 
-  scheduledCompletionTimers.set(String(taskId), timeoutId);
+  scheduledCompletionTimers.set(String(taskId), {
+    timeoutId,
+    roomId,
+    dueAt: Date.now() + delayMs,
+  });
   return timeoutId;
 }
 
 export function cancelScheduledCompletion(taskId) {
   const key = String(taskId);
-  const id = scheduledCompletionTimers.get(key);
-  if (id) {
-    clearTimeout(id);
+  const entry = scheduledCompletionTimers.get(key);
+  if (entry) {
+    clearTimeout(entry.timeoutId);
     scheduledCompletionTimers.delete(key);
     return true;
   }
@@ -46,13 +64,104 @@ export function cancelScheduledCompletion(taskId) {
 }
 
 export function cancelAllScheduledForRoom(roomId) {
-  // best-effort: iterate keys and cancel timers for tasks that belong to room
-  for (const [taskId, timeoutId] of scheduledCompletionTimers.entries()) {
-    // We intentionally avoid an async DB lookup here to keep this fast;
-    // callers that need room-scoped cancellation should fetch task ids first
-    clearTimeout(timeoutId);
+  for (const [taskId, entry] of scheduledCompletionTimers.entries()) {
+    if (roomId && entry.roomId !== roomId) continue;
+    clearTimeout(entry.timeoutId);
     scheduledCompletionTimers.delete(taskId);
   }
+}
+
+async function pauseRunningTasksForRoom(io, roomId) {
+  const runningTasks = await Task.find({ roomId, status: "running" });
+  if (runningTasks.length === 0) return [];
+
+  const updatedTasks = [];
+  for (const task of runningTasks) {
+    const remainingExecutionMs = getRemainingExecutionMs(task);
+    cancelScheduledCompletion(task._id);
+    task.status = "paused";
+    task.pausedAt = new Date();
+    task.remainingExecutionMs = remainingExecutionMs;
+    await task.save();
+    const populatedTask = await task.populate("assignedServer");
+    updatedTasks.push(populatedTask);
+    if (io) io.to(roomId).emit("task:updated", populatedTask);
+  }
+
+  return updatedTasks;
+}
+
+async function resumePausedTasksForRoom(io, roomId) {
+  const pausedTasks = await Task.find({ roomId, status: "paused" });
+  if (pausedTasks.length === 0) return [];
+
+  const resumedTasks = [];
+  for (const task of pausedTasks) {
+    const remainingExecutionMs =
+      typeof task.remainingExecutionMs === "number" && task.remainingExecutionMs > 0
+        ? task.remainingExecutionMs
+        : Math.max(0, (task.executionTime || 0) * 1000);
+
+    task.status = "running";
+    task.pausedAt = null;
+    task.remainingExecutionMs = remainingExecutionMs;
+    await task.save();
+
+    const populatedTask = await task.populate("assignedServer");
+    resumedTasks.push(populatedTask);
+    if (io) io.to(roomId).emit("task:updated", populatedTask);
+    scheduleAutoCompletion(task._id, io, remainingExecutionMs, roomId);
+  }
+
+  return resumedTasks;
+}
+
+async function rewindLatestTaskForRoom(io, roomId) {
+  const latestTask = await Task.findOne({
+    roomId,
+    status: { $in: ["running", "paused"] },
+  }).sort({ startedAt: -1, updatedAt: -1, createdAt: -1 });
+
+  if (!latestTask) return null;
+
+  cancelScheduledCompletion(latestTask._id);
+
+  const server = latestTask.assignedServer
+    ? await Server.findById(latestTask.assignedServer)
+    : null;
+
+  if (server) {
+    const remainingTasks = await Task.find({
+      roomId,
+      assignedServer: server._id,
+      status: { $in: ["running", "paused"] },
+      _id: { $ne: latestTask._id },
+    });
+
+    server.usedCPU = remainingTasks.reduce((sum, task) => sum + (task.cpu || 0), 0);
+    server.usedRAM = remainingTasks.reduce((sum, task) => sum + (task.ram || 0), 0);
+    await server.save();
+
+    if (io) io.to(roomId).emit("server:updated", server);
+
+    if (server.isAutoScaled && server.usedCPU === 0 && server.usedRAM === 0) {
+      await Server.findByIdAndDelete(server._id);
+      if (io) io.to(roomId).emit("server:removed", { serverId: server._id });
+    }
+  }
+
+  latestTask.status = "waiting";
+  latestTask.startedAt = null;
+  latestTask.pausedAt = null;
+  latestTask.remainingExecutionMs = null;
+  latestTask.assignedServer = null;
+  latestTask.allocationMethod = null;
+  await latestTask.save();
+
+  const populatedTask = await latestTask.populate("assignedServer");
+  if (io) io.to(roomId).emit("task:updated", populatedTask);
+
+  return populatedTask;
 }
 
 function serverLoadRatio(server) {
@@ -437,7 +546,7 @@ export async function runSchedulerLogic(io, roomId = null, options = {}) {
     const justRunning = waiting.filter((t) => t.status === "running");
     for (const t of justRunning) savePromises.push(t.save());
 
-    await Promise.all(savePromises);
+    await Promise.allSettled(savePromises);
 
     // Emit individual task and server updates to ensure frontend sees all changes
     if (io && roomId) {
@@ -462,7 +571,7 @@ export async function runSchedulerLogic(io, roomId = null, options = {}) {
       const timeMs = (taskData.executionTime || 5) * 1000;
       try {
         if (!alloc.unsafe) {
-          scheduleAutoCompletion(taskData._1d || taskData._id, io, timeMs);
+          scheduleAutoCompletion(taskData._id, io, timeMs, roomId);
         }
       } catch (err) {
         console.error("Failed to schedule auto-completion:", err);
@@ -493,7 +602,15 @@ export async function completeTaskAutomatically(taskId, io) {
       return;
     }
 
-    const completedTask = await completeTaskLogic(taskId, io);
+    let completedTask;
+    try {
+      completedTask = await completeTaskLogic(taskId, io);
+    } catch (err) {
+      if (String(err?.message || "").includes("Task is not running")) {
+        return;
+      }
+      throw err;
+    }
 
     if (io) {
       // Run scheduler for new allocations and auto-cleanup
@@ -506,6 +623,43 @@ export async function completeTaskAutomatically(taskId, io) {
     console.error("Auto completion error:", err);
   } finally {
     tasksBeingCompleted.delete(taskIdStr);
+  }
+}
+
+export async function pauseSchedulerForRoom(req, res) {
+  try {
+    const io = req.app && req.app.get("io");
+    cancelAllScheduledForRoom(req.roomId);
+    const pausedTasks = await pauseRunningTasksForRoom(io, req.roomId);
+    res.json({ paused: pausedTasks.length, tasks: pausedTasks });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function resumeSchedulerForRoom(req, res) {
+  try {
+    const io = req.app && req.app.get("io");
+    const resumedTasks = await resumePausedTasksForRoom(io, req.roomId);
+    if (io && resumedTasks.length > 0) {
+      await runSchedulerLogic(io, req.roomId).catch(console.error);
+    }
+    res.json({ resumed: resumedTasks.length, tasks: resumedTasks });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function rewindSchedulerForRoom(req, res) {
+  try {
+    const io = req.app && req.app.get("io");
+    const task = await rewindLatestTaskForRoom(io, req.roomId);
+    if (!task) {
+      return res.status(404).json({ error: "No running task to rewind" });
+    }
+    res.json({ rewound: 1, task });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
 

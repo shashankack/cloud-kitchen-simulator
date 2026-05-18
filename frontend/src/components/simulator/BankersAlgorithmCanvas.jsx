@@ -38,6 +38,7 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   const {
     retryTaskForRoom,
     retryAllFailedTasksForRoom,
+    abortTaskForRoom,
     globalProgress,
     loading,
     deadlockEnabled,
@@ -124,7 +125,9 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   const availableRAM = totalRAM - usedRAM;
 
   // Categorize tasks
-  const runningTasks = tasks.filter((t) => t.status === "running");
+  const runningTasks = tasks.filter(
+    (t) => t.status === "running" || t.status === "paused",
+  );
   const waitingTasks = tasks.filter((t) => t.status === "waiting");
   const completedTasks = tasks.filter((t) => t.status === "completed");
   const failedTasks = tasks.filter((t) => t.status === "failed");
@@ -140,6 +143,10 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
   const ramPercent = totalRAM > 0 ? Math.round((usedRAM / totalRAM) * 100) : 0;
 
   const getRemainingTime = (task) => {
+    if (!task) return null;
+    if (task.status === "paused" && typeof task.remainingExecutionMs === "number") {
+      return Math.max(0, Math.ceil(task.remainingExecutionMs / 1000));
+    }
     if (!task?.startedAt || task.status !== "running") return null;
 
     const startedAt = new Date(task.startedAt).getTime();
@@ -150,6 +157,10 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
 
   const handleRetryTask = async (taskId) => {
     await retryTaskForRoom(taskId);
+  };
+
+  const handleAbortTask = async (taskId) => {
+    await abortTaskForRoom(taskId);
   };
 
   const handleRetryAllFailed = async () => {
@@ -546,6 +557,7 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
                 const { techName, kitchenName } = mapNamePair(task.name);
                 const displayName = isKitchen ? kitchenName : techName;
                 const remaining = getRemainingTime(task);
+                const isPaused = task.status === "paused";
 
                 return (
                   <Box
@@ -567,10 +579,28 @@ function BankersAlgorithmCanvas({ tasks = [], servers = [] }) {
                       <Typography sx={{ fontSize: "0.8rem", color: "primary.main" }}>
                         Uses {task.cpu} {isKitchen ? "cap" : "CPU"} + {task.ram} {isKitchen ? "ing" : "RAM"}
                       </Typography>
+                      {isPaused && (
+                        <Chip
+                          label="Paused"
+                          size="small"
+                          sx={{ mt: 0.7, fontWeight: 800 }}
+                        />
+                      )}
                     </Box>
-                    <Typography sx={{ fontSize: "0.8rem", color: "#4cc9f0", fontWeight: 800 }}>
-                      {remaining !== null ? `${remaining}s left` : "Running"}
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography sx={{ fontSize: "0.8rem", color: "#4cc9f0", fontWeight: 800 }}>
+                        {remaining !== null ? `${remaining}s left` : isPaused ? "Paused" : "Running"}
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleAbortTask(task._id)}
+                        sx={{ textTransform: "none", fontWeight: 800 }}
+                      >
+                        Kill
+                      </Button>
+                    </Stack>
                   </Box>
                 );
               })}

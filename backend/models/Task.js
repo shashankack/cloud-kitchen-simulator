@@ -20,7 +20,7 @@ const taskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["waiting", "running", "completed", "failed"],
+      enum: ["waiting", "running", "paused", "completed", "failed"],
       default: "waiting",
     },
     roomId: {
@@ -39,6 +39,14 @@ const taskSchema = new mongoose.Schema(
     },
     startedAt: {
       type: Date,
+      default: null,
+    },
+    pausedAt: {
+      type: Date,
+      default: null,
+    },
+    remainingExecutionMs: {
+      type: Number,
       default: null,
     },
     allocationMethod: {

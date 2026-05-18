@@ -7,6 +7,7 @@ import {
   completeTask,
   retryTask,
   retryAllFailedTasks,
+  abortTask,
   seedTasks,
   resetTasks,
 } from "../controllers/taskController.js";
@@ -20,6 +21,7 @@ router.get("/", validateRoomId, listTasks);
 router.get("/logs", validateRoomId, listTaskLogs);
 router.delete("/logs", validateRoomId, clearTaskLogs);
 router.post("/:id/complete", validateRoomId, completeTask);
+router.post("/:id/abort", validateRoomId, abortTask);
 router.post("/:id/retry", validateRoomId, retryTask);
 router.post("/retry-all-failed", validateRoomId, retryAllFailedTasks);
 router.post("/seed", validateRoomId, seedTasks);
